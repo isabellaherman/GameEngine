@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Runtime Architecture</title>
+<style>
+  :root { --ink: #1a1a1a; --mid: #6b6b6b; --faint: #a3a3a3; --line: #1a1a1a; --shade: #ececea; --paper: #ffffff; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font: 13px/1.45 ui-sans-serif, -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif; }
+  .page { max-width: 1040px; margin: 0 auto; padding: 56px 24px 72px; }
+  h1 { font-size: 20px; font-weight: 600; margin: 0 0 6px; }
+  .sub { color: var(--mid); margin: 0 0 32px; }
+
+  .figure { border: 1px solid var(--line); padding: 10px; display: flex; flex-direction: column; gap: 10px; }
+  .layer { border: 1px solid var(--line); }
+  .layer > h2 { margin: 0; padding: 5px 8px; font-size: 11px; font-weight: 600; border-bottom: 1px solid var(--line); background: var(--shade); }
+  .row { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px; }
+  .split { display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); gap: 10px; }
+
+  .b { flex: 1 1 120px; min-height: 40px; display: flex; align-items: center; justify-content: center; text-align: center; padding: 6px 8px; border: 1px solid var(--line); font-size: 12px; }
+  .b.given { background: var(--shade); }
+  .b.partial { background: linear-gradient(to right, var(--shade) 50%, var(--paper) 50%); }
+  .b.no { border-style: dashed; border-color: var(--faint); color: var(--faint); }
+  .b.yes { font-weight: 600; }
+
+  .key { display: flex; flex-wrap: wrap; gap: 20px; margin-top: 14px; font-size: 11.5px; color: var(--mid); }
+  .key span { display: inline-flex; align-items: center; gap: 6px; }
+  .key i { width: 22px; height: 12px; border: 1px solid var(--line); display: inline-block; }
+  .key i.yes { background: var(--paper); }
+  .key i.partial { background: linear-gradient(to right, var(--shade) 50%, var(--paper) 50%); }
+  .key i.given { background: var(--shade); }
+  .key i.no { border-style: dashed; border-color: var(--faint); }
+  .caption { margin-top: 10px; font-size: 11.5px; color: var(--mid); }
+
+  h3 { font-size: 13px; font-weight: 600; margin: 48px 0 8px; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th, td { text-align: left; vertical-align: top; padding: 6px 10px 6px 0; border-bottom: 1px solid var(--shade); }
+  th { font-weight: 600; color: var(--mid); border-bottom-color: var(--line); }
+  td:first-child { white-space: nowrap; }
+  code { font: 11.5px ui-monospace, Menlo, monospace; }
+
+  @media (max-width: 700px) { .split { grid-template-columns: 1fr; } .page { padding: 32px 16px; } td:first-child { white-space: normal; } }
+</style>
+</head>
+<body>
+<main class="page">
+  <h1>Runtime Engine Architecture</h1>
+  <p class="sub">GameEngine 0.0.1. Layers after J. Gregory, <i>Game Engine Architecture</i>. Each layer depends only on the layers below it.</p>
+
+  <div class="figure">
+    <section class="layer">
+      <h2>Game-Specific Subsystems</h2>
+      <div class="row">
+        <div class="b no">Player mechanics</div><div class="b no">Game cameras</div><div class="b no">AI</div><div class="b no">Weapons, power-ups, vehicles…</div>
+      </div>
+    </section>
+
+    <section class="layer">
+      <h2>Gameplay Foundations</h2>
+      <div class="row">
+        <div class="b partial">World</div><div class="b no">Game objects</div><div class="b no">Events &amp; messaging</div><div class="b no">Scripting</div><div class="b no">Game loop &amp; time</div>
+      </div>
+    </section>
+
+    <div class="split" style="--n: 3">
+      <section class="layer"><h2>Front End</h2><div class="row"><div class="b partial">Editor UI</div><div class="b no">In-game HUD</div></div></section>
+      <section class="layer"><h2>Visual Effects</h2><div class="row"><div class="b partial">Grid fade</div><div class="b no">Particles</div><div class="b no">Post-processing</div></div></section>
+      <section class="layer"><h2>Animation</h2><div class="row"><div class="b partial">Camera easing</div><div class="b no">Skeletal</div></div></section>
+    </div>
+
+    <section class="layer">
+      <h2>Scene Graph / Culling Optimizations</h2>
+      <div class="row"><div class="b no">Scene graph</div><div class="b no">Frustum culling</div><div class="b no">Spatial partitioning</div><div class="b no">LOD</div></div>
+    </section>
+
+    <div class="split" style="--n: 4">
+      <section class="layer"><h2>Low-Level Renderer</h2><div class="row"><div class="b partial">Line renderer</div><div class="b yes">Camera</div><div class="b no">Meshes</div><div class="b no">Materials</div><div class="b no">Lights</div></div></section>
+      <section class="layer"><h2>Human Interface Devices</h2><div class="row"><div class="b partial">Mouse</div><div class="b partial">Keyboard</div><div class="b no">Gamepad</div></div></section>
+      <section class="layer"><h2>Collision &amp; Physics</h2><div class="row"><div class="b no">Collision</div><div class="b no">Rigid bodies</div></div></section>
+      <section class="layer"><h2>Audio · Online · Profiling</h2><div class="row"><div class="b no">Audio</div><div class="b no">Multiplayer</div><div class="b no">Profiling &amp; debug</div></div></section>
+    </div>
+
+    <section class="layer">
+      <h2>Resources</h2>
+      <div class="row"><div class="b no">Resource manager</div><div class="b no">Meshes</div><div class="b no">Textures</div><div class="b no">Materials</div><div class="b no">Fonts</div><div class="b partial">Colors</div></div>
+    </section>
+
+    <section class="layer">
+      <h2>Core Systems</h2>
+      <div class="row">
+        <div class="b yes">Math library</div><div class="b yes">Laws &amp; proofs</div><div class="b yes">Accessibility settings</div><div class="b partial">Unit tests</div><div class="b partial">Parsers</div>
+        <div class="b given">Memory</div><div class="b given">Strings &amp; containers</div><div class="b given">Design tokens</div><div class="b no">Logging &amp; asserts</div><div class="b no">Random numbers</div><div class="b no">File I/O</div>
+      </div>
+    </section>
+
+    <section class="layer">
+      <h2>Platform Independence Layer</h2>
+      <div class="row"><div class="b given">Browser</div><div class="b no">Native build (Bend → C / Metal)</div></div>
+    </section>
+
+    <section class="layer">
+      <h2>Third-Party SDKs</h2>
+      <div class="row"><div class="b given">Bend</div><div class="b given">Bend-UI</div><div class="b given">WebGL2</div></div>
+    </section>
+
+    <div class="split" style="--n: 3">
+      <section class="layer"><h2>OS</h2><div class="row"><div class="b given">macOS · Windows · Linux</div></div></section>
+      <section class="layer"><h2>Drivers</h2><div class="row"><div class="b given">GPU drivers</div></div></section>
+      <section class="layer"><h2>Hardware</h2><div class="row"><div class="b given">CPU · GPU</div></div></section>
+    </div>
+  </div>
+
+  <div class="key">
+    <span><i class="yes"></i>Built</span>
+    <span><i class="partial"></i>Started</span>
+    <span><i class="given"></i>Provided by Bend, Bend-UI or the browser</span>
+    <span><i class="no"></i>Not yet</span>
+  </div>
+  <p class="caption">Figure 1. Runtime layers of the engine and their state.</p>
+
+  <h3>Where things are</h3>
+  <table>
+    <tr><th>Part</th><th>Files</th><th>State</th></tr>
+    <tr><td>World</td><td><code>engine/world.bend</code></td><td>Origin, Y up, right-handed, 1 unit = 1 m, ground grid. No objects.</td></tr>
+    <tr><td>Math library</td><td><code>engine/vec.bend</code></td><td>V3, V4, M4. No quaternions.</td></tr>
+    <tr><td>Camera</td><td><code>engine/camera.bend</code></td><td>Orbit, pan, zoom, look-at, perspective.</td></tr>
+    <tr><td>Line renderer</td><td><code>main.js</code></td><td>WebGL2, one shader, lines only. Bend computes; JS draws.</td></tr>
+    <tr><td>Editor UI</td><td><code>editor/defaults/</code>, <code>index.html</code></td><td>Axis gizmo and info dropdown, Bend-UI.</td></tr>
+    <tr><td>Keyboard</td><td><code>KEYS.bend</code>, <code>LAWS.bend</code></td><td>Keys 1–4; laws prevent overlaps.</td></tr>
+    <tr><td>Accessibility</td><td><code>editor/defaults/ACCESSIBILITY.bend</code></td><td>reduce_motion.</td></tr>
+    <tr><td>Colors</td><td><code>engine/color.bend</code></td><td>Bend-UI tokens as RGB.</td></tr>
+    <tr><td>Build</td><td><code>tools/dev.ts</code>, <code>package.json</code></td><td>Dev server, bundle, manual deploy to GitHub Pages.</td></tr>
+  </table>
+</main>
+</body>
+</html>
