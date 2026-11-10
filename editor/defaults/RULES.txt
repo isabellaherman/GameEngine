@@ -1,5 +1,11 @@
 EDITOR DEFAULTS
 
+ACCESSIBILITY.bend comes first. It holds the editor's accessibility settings, one line each.
+It is the one file in Editor Defaults where values are set: they are the person's settings.
+Every motion in the editor reads it before it moves. reduce_motion turns travel into a cut.
+The person's system "Reduce motion" turns reduce_motion on too.
+The info button always shows whether motion is reduced.
+
 Editor Defaults gathers the basic facts of the scene in one place of the interface.
 It is not a menu: it is always on screen, in the top-right corner of the viewport.
 It shows the axis gizmo: the World's axes seen from the editor camera.
@@ -15,6 +21,7 @@ A value made up in Editor Defaults, or one that drifts from its source, breaks a
 Check it with: bend editor/defaults/PROOF.bend
 
 Files:
+  ACCESSIBILITY.bend  the accessibility settings (edit these)
   defaults.bend   the values, each handed on from its source
   LAWS.bend       the rule, one law per value
   PROOF.bend      the proofs

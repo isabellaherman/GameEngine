@@ -13,6 +13,8 @@
   .editor-defaults__gizmo { display: block; touch-action: none; cursor: grab; }
   .editor-defaults__info { padding: var(--space-3); gap: var(--space-2); }
   .editor-defaults__row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); }
+  .editor-defaults__readonly { align-self: flex-start; }
+  .editor-defaults__readonly > button { pointer-events: none; }   /* it shows the state; ACCESSIBILITY.bend sets it */
 </style>
 </head>
 <body class="desk">

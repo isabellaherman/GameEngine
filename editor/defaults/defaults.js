@@ -2,7 +2,7 @@
 // It draws what defaults.bend hands on. The gizmo moves only the editor camera
 // (how we look); it never changes the World.
 
-import { tokens as T } from "bend-ui";
+import { tokens as T, initSegmented } from "bend-ui";
 import D from "./defaults.bend";
 
 const list = (l) => {
@@ -27,12 +27,12 @@ function info() {
   const btn = el("button", "btn btn--plain btn--neutral btn--sm btn--icon btn--round");
   btn.setAttribute("aria-haspopup", "menu");
   btn.setAttribute("aria-expanded", "false");
-  btn.setAttribute("aria-label", "About the axes");
+  btn.setAttribute("aria-label", "About the scene and accessibility");
   btn.innerHTML = '<svg class="icon"><use href="#i-info"/></svg>';
 
   const menu = el("div", "menu menu--end editor-defaults__info");
   menu.setAttribute("role", "dialog");
-  menu.setAttribute("aria-label", "About the axes");
+  menu.setAttribute("aria-label", "About the scene and accessibility");
   menu.hidden = true;
 
   const { x, y, z } = D.origin();
@@ -49,6 +49,34 @@ function info() {
     row.append(name, el("span", "detail", a.points));
     menu.append(row);
   }
+
+  // Accessibility (ACCESSIBILITY.bend): whether motion is reduced, and why.
+  // A Bend-UI field holding a segmented Off/On that only shows the state
+  // (data-manual: a click changes nothing); it springs when the state changes.
+  const field = el("div", "field");
+  const label = el("span", "field__label", "Reduce motion");
+  label.id = "editor-defaults-motion";
+  const seg = el("div", "segmented segmented--slide editor-defaults__readonly");
+  seg.dataset.motion = "spring";
+  seg.dataset.manual = "";
+  seg.setAttribute("role", "group");
+  seg.setAttribute("aria-labelledby", "editor-defaults-motion");
+  const off = el("button", "", "Off"), on = el("button", "", "On");
+  for (const b of [off, on]) { b.type = "button"; b.tabIndex = -1; }
+  seg.append(off, on);
+  field.append(label, seg);
+  const show = () => {
+    const reduced = D.reduce_motion(still.matches);
+    const was = on.getAttribute("aria-pressed") === "true";
+    on.setAttribute("aria-pressed", reduced);
+    off.setAttribute("aria-pressed", !reduced);
+    if (was !== reduced) seg.dispatchEvent(new CustomEvent("change", { detail: reduced ? on : off }));
+  };
+  show();
+  still.addEventListener("change", show);
+  menu.append(el("hr", "separator"), el("h3", "group-title", "Accessibility"), field);
+  queueMicrotask(() => initSegmented(seg));
+
   dd.append(btn, menu);
   return dd;
 }
@@ -114,16 +142,17 @@ export function mountDefaults(root, { getCam, setCam, orbit }) {
   let press = null, flight = 0;
   const at = (e) => { const b = canvas.getBoundingClientRect(); return [e.clientX - b.left, e.clientY - b.top]; };
 
-  function fly(id) {
+  function flyTo(to) {
     cancelAnimationFrame(flight);
-    const from = getCam(), to = D.gizmo_snap(from, id), start = performance.now(), ms = D.gizmo_duration();
+    const from = getCam(), start = performance.now(), ms = D.gizmo_duration();
     const step = (now) => {
-      const t = still.matches ? 1 : (now - start) / ms;
+      const t = D.reduce_motion(still.matches) ? 1 : (now - start) / ms;   // ACCESSIBILITY.bend: a cut
       setCam(D.gizmo_between(from, to, t));
       if (t < 1) flight = requestAnimationFrame(step);
     };
     flight = requestAnimationFrame(step);
   }
+  const fly = (id) => flyTo(D.gizmo_snap(getCam(), id));
 
   canvas.addEventListener("pointerenter", () => { inside = true; draw(); });
   canvas.addEventListener("pointerleave", () => { inside = false; hover = none; draw(); });
@@ -156,6 +185,6 @@ export function mountDefaults(root, { getCam, setCam, orbit }) {
   canvas.addEventListener("pointerup", release);
   canvas.addEventListener("pointercancel", () => { press = null; });
 
-  // look(id): the same turn as clicking handle id (used by the view shortcuts).
-  return { draw, look: fly };
+  // look(id): the same turn as clicking handle id; home(): back to the start view (the view shortcuts).
+  return { draw, look: fly, home: () => flyTo(D.gizmo_home()) };
 }

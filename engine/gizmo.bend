@@ -96,6 +96,10 @@ def snap(+cam: Cam.Cam, +id: U32) -> Cam.Cam:
   Cam.Cam{target, _, _, dist} = cam
   Cam.Cam{target, snap_yaw(id), snap_pitch(id), dist}
 
+# Going home: the camera as the editor starts.
+def home() -> Cam.Cam:
+  Cam.start()
+
 # The way there takes duration_enter (ms) and eases out.
 def duration() -> F32: U32.to_f32(T.duration_enter_ms())
 
@@ -105,10 +109,11 @@ def turn(+a: F32, +b: F32) -> F32:
   +d = (b - a : F32)
   (d - tau * F32.floor(((d + F32.pi()) / tau : F32)) : F32)
 
-# The camera at time t (0..1) on the way from a to b.
+# The camera at time t (0..1) on the way from a to b: it turns the short way
+# and glides its target and distance.
 def between(+a: Cam.Cam, +b: Cam.Cam, +t: F32) -> Cam.Cam:
   Cam.Cam{+ta, +ya, +pa, +da} = a
-  Cam.Cam{_, +yb, +pb, _} = b
+  Cam.Cam{+tb, +yb, +pb, +db} = b
   +k = M.ease_out(F32.clamp(t, 0.0, 1.0))
-  Cam.Cam{ta, (ya + turn(ya, yb) * k : F32), (pa + (pb - pa) * k : F32), da}
+  Cam.Cam{V.add(ta, V.scale(V.sub(tb, ta), k)), (ya + turn(ya, yb) * k : F32), (pa + (pb - pa) * k : F32), (da + (db - da) * k : F32)}
 

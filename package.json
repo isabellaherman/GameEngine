@@ -4,7 +4,7 @@
   "private": true,
   "version": "0.0.1",
   "scripts": {
-    "dev": "bun --port=3100 index.html",
+    "dev": "bun tools/dev.ts",
     "build": "bend index.html -o dist",
     "check": "bend PROOF.bend && bend engine/world.bend --check-only && bend engine/camera.bend --check-only && bend engine/gizmo.bend --check-only && bend editor/defaults/PROOF.bend"
   },

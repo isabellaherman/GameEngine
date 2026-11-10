@@ -9,7 +9,7 @@ import World from "./engine/world.bend";
 import Camera from "./engine/camera.bend";
 import { mountDefaults } from "./editor/defaults/defaults.js";
 
-theme({ mode: "dark" });
+theme({ mode: "dark", radius: "pill" });   // every button and segmented in the layout is a pill
 
 // A Bend list arrives as cons cells; the GPU wants a flat array.
 const flat = (list) => {
@@ -99,8 +99,8 @@ const defaults = mountDefaults(document.getElementById("editor-defaults"), {
 {
   const handlers = {};
   for (let l = Keys.keymap(); l.$ === "Con"; l = l.tail) {
-    const action = l.head.action, id = Keys.view_handle(action);
-    handlers[action] = () => defaults.look(id);
+    const action = l.head.action;
+    handlers[action] = Keys.is_home(action) ? () => defaults.home() : () => defaults.look(Keys.view_handle(action));
   }
   createKeys(Keys.keymap(), handlers);
 }

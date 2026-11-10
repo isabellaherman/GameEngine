@@ -7,7 +7,17 @@ import ../../engine/vec.bend as V
 import ../../engine/world.bend as W
 import ../../engine/camera.bend as Cam
 import ../../engine/gizmo.bend as G
+import ./ACCESSIBILITY.bend as A
 import ./defaults.bend as D
+
+# LAW: motion is reduced exactly when ACCESSIBILITY.bend or the system asks for it.
+law reduce_motion_is_the_settings:
+  for system: Bool
+  {D.reduce_motion(system) == (A.reduce_motion() || system) : Bool}
+
+# LAW: the setting shown is the one written in ACCESSIBILITY.bend.
+law reduce_motion_setting_is_the_files:
+  {D.reduce_motion_setting() == A.reduce_motion() : Bool}
 
 # LAW: the origin shown is the World's origin.
 law origin_is_the_worlds:
@@ -47,6 +57,10 @@ law gizmo_snap_is_the_gizmos:
   for cam: Cam.Cam
   for id: U32
   {D.gizmo_snap(cam, id) == G.snap(cam, id) : Cam.Cam}
+
+# LAW: home is the gizmo's home.
+law gizmo_home_is_the_gizmos:
+  {D.gizmo_home() == G.home() : Cam.Cam}
 
 # LAW: for every two cameras and time, the way between them is the gizmo's.
 law gizmo_between_is_the_gizmos:
