@@ -2,10 +2,11 @@
   "name": "gameengine",
   "type": "module",
   "private": true,
+  "version": "0.0.1",
   "scripts": {
     "dev": "bun --port=3100 index.html",
     "build": "bend index.html -o dist",
-    "check": "bend engine/world.bend --check-only && bend engine/camera.bend --check-only"
+    "check": "bend PROOF.bend && bend engine/world.bend --check-only && bend engine/camera.bend --check-only && bend engine/gizmo.bend --check-only && bend editor/defaults/PROOF.bend"
   },
   "dependencies": {
     "bend-ui": "github:isabellaherman/Bend-UI"

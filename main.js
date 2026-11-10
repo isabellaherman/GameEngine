@@ -3,8 +3,11 @@
 // (engine/camera.bend) decide every number.
 
 import { theme } from "bend-ui";
+import { createKeys } from "bend-ui/keys";
+import Keys from "./KEYS.bend";
 import World from "./engine/world.bend";
 import Camera from "./engine/camera.bend";
+import { mountDefaults } from "./editor/defaults/defaults.js";
 
 theme({ mode: "dark" });
 
@@ -86,6 +89,22 @@ const [skyR, skyG, skyB] = flat(World.sky());
 let cam = Camera.start();
 let queued = false;
 
+const defaults = mountDefaults(document.getElementById("editor-defaults"), {
+  getCam: () => cam,
+  setCam: (c) => { cam = c; redraw(); },
+  orbit: (c, dx, dy) => Camera.orbit(c, dx, dy),
+});
+
+// Shortcuts: the keymap and what each view looks from are KEYS.bend.
+{
+  const handlers = {};
+  for (let l = Keys.keymap(); l.$ === "Con"; l = l.tail) {
+    const action = l.head.action, id = Keys.view_handle(action);
+    handlers[action] = () => defaults.look(id);
+  }
+  createKeys(Keys.keymap(), handlers);
+}
+
 function draw() {
   queued = false;
   const w = canvas.width, h = canvas.height;
@@ -101,6 +120,7 @@ function draw() {
   gl.uniform2fv(u.fade, flat(World.fade(cam)));
   gl.bindVertexArray(vao);
   gl.drawArrays(gl.LINES, 0, lines.length / 6);
+  defaults.draw();
 }
 
 const redraw = () => { if (!queued) { queued = true; requestAnimationFrame(draw); } };

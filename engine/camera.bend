@@ -25,6 +25,11 @@ def dist_max() -> F32: 500.0
 def start() -> Cam:
   Cam{V.V3{0.0, 0.0, 0.0}, 0.7853982, 0.4636476, 14.0}
 
+# The point the camera looks at.
+def target(cam: Cam) -> V.V3:
+  Cam{t, _, _, _} = cam
+  t
+
 # The camera's position in the World.
 def eye(cam: Cam) -> V.V3:
   Cam{target, +yaw, +pitch, +dist} = cam

@@ -7,13 +7,30 @@
 #   a stronger one every 10 meters, and the X and Z axes through the origin.
 #
 # Colors come from Bend-UI's tokens: the sky is the dark ground, the grid uses
-# the border tones, X is danger (red) and Z is accent (blue), as in other engines.
+# the border tones, X is danger (red), Y is success (green) and Z is accent
+# (blue), as in other engines. The ground draws X and Z; Y rises from it.
 
 import Base
 import ./vec.bend as V
 import ./color.bend as C
 import ./camera.bend as Cam
 import ../node_modules/bend-ui/TOKENS.bend as T
+
+# An axis of the World: its name, where it points, and its tone (a Bend-UI
+# token).
+type Axis is Data:
+  Axis{name: String, points: String, tone: String}
+
+def origin() -> V.V3:
+  V.V3{0.0, 0.0, 0.0}
+
+def x_tone() -> String: T.color_danger()
+def y_tone() -> String: T.color_success()
+def z_tone() -> String: T.color_accent()
+
+def axis_x() -> Axis: Axis{"X", "right", x_tone()}
+def axis_y() -> Axis: Axis{"Y", "up", y_tone()}
+def axis_z() -> Axis: Axis{"Z", "toward the viewer", z_tone()}
 
 def half() -> U32: 100           # the grid reaches 100 m from the origin
 def major_every() -> U32: 10     # a strong line every 10 m
@@ -37,8 +54,8 @@ def cross_at(+i: F32, +h: F32, +c: V.V3) -> List<F32>:
 # The axes through the origin.
 def axes(+h: F32) -> List<F32>:
   List.append(&1, F32,
-    line(V.V3{(0.0 - h : F32), 0.0, 0.0}, V.V3{h, 0.0, 0.0}, C.rgb(T.color_danger())),
-    line(V.V3{0.0, 0.0, (0.0 - h : F32)}, V.V3{0.0, 0.0, h}, C.rgb(T.color_accent())))
+    line(V.V3{(0.0 - h : F32), 0.0, 0.0}, V.V3{h, 0.0, 0.0}, C.rgb(x_tone())),
+    line(V.V3{0.0, 0.0, (0.0 - h : F32)}, V.V3{0.0, 0.0, h}, C.rgb(z_tone())))
 
 def pick(c: Bool, a: List<F32>, b: List<F32>) -> List<F32>:
   match c:

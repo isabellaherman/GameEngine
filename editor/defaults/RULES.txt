@@ -1,0 +1,21 @@
+EDITOR DEFAULTS
+
+Editor Defaults gathers the basic facts of the scene in one place of the interface.
+It is not a menu: it is always on screen, in the top-right corner of the viewport.
+It shows the axis gizmo: the World's axes seen from the editor camera.
+The gizmo shows X in red, Y in green and Z in blue; the + side is filled and labeled, the - side is hollow.
+Hovering a handle rings it. Clicking a handle turns the camera to look along that axis. Dragging the gizmo orbits the camera.
+The info button opens a Bend-UI dropdown that says where the origin is and where each axis points.
+It only receives: every value it shows comes from its source of truth.
+The sources of truth are engine/world.bend (origin, axes, tones) and engine/gizmo.bend (the gizmo).
+It creates no value, changes no value and writes nothing.
+The gizmo moves only the editor camera, the way we look; it never changes the World.
+LAWS.bend states this rule for each value, and PROOF.bend proves it.
+A value made up in Editor Defaults, or one that drifts from its source, breaks a law.
+Check it with: bend editor/defaults/PROOF.bend
+
+Files:
+  defaults.bend   the values, each handed on from its source
+  LAWS.bend       the rule, one law per value
+  PROOF.bend      the proofs
+  defaults.js     draws the gizmo and the info button
