@@ -1,0 +1,27 @@
+MASTER
+
+- We are building a game engine from scratch, one step at a time.
+- Each version adds what we decide it needs, and nothing more.
+- We write the engine in Bend: every rule, every number and every decision lives in .bend files.
+- The interface uses Bend-UI (bun add github:isabellaherman/Bend-UI), and only Bend-UI.
+- The interface shows the scene; we never invent menus or panels that were not asked for.
+- We will meet challenges along the way, and that is normal: we solve them and keep going.
+
+RUN
+
+Open a terminal in this folder:
+  cd ~/Documents/HOC/GameEngine
+
+Install once:
+  bun install
+
+Open the engine:
+  bun run dev
+  then open http://localhost:3100 in the browser.
+  Ctrl+C in the terminal stops it.
+
+Check the Bend code:
+  bun run check
+
+Build a static copy into dist/:
+  bun run build

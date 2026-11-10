@@ -1,0 +1,13 @@
+{
+  "name": "gameengine",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "bun --port=3100 index.html",
+    "build": "bend index.html -o dist",
+    "check": "bend engine/world.bend --check-only && bend engine/camera.bend --check-only"
+  },
+  "dependencies": {
+    "bend-ui": "github:isabellaherman/Bend-UI"
+  }
+}

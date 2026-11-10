@@ -1,0 +1,4 @@
+# Bend's loader: lets JS `import World from "./engine/world.bend"`.
+# Points at a clone of bendlang/bend next to this project.
+[serve.static]
+plugins = ["../bend/bend2/main.ts"]

@@ -1,0 +1,9 @@
+World Coordinate System
+
+
+The world is defined by four conventions:
+
+- Origin: (0, 0, 0) is the reference point of the world.
+- Axes: Y points up and the system is right-handed. (X to the right, Z comes in your direction)
+Scale: 1 world unit = 1 meter.
+- Ground Plane: The ground lies at Y = 0, visualized by a grid with lines every 1 meter and stronger lines every 10 meters.
