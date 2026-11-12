@@ -65,3 +65,9 @@ def Laws.instance_keeps_the_graph(x):
 
 def Laws.parameter_used_twice_is_one_uniform():
   {==}
+
+def Laws.scene_materials_are_complete():
+  {==}
+
+def Laws.hidden_thing_is_complete():
+  {==}

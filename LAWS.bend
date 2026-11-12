@@ -10,7 +10,10 @@ import ./engine/mesh.bend as Mesh
 import ./engine/shader/node.bend as N
 import ./engine/shader/compile.bend as G
 import ./engine/material.bend as Mat
-import ./engine/water.bend as Water
+import ./content/water.bend as Water
+import ./engine/scene.bend as S
+import ./engine/transform.bend as Tr
+import ./content/scene.bend as Content
 
 # ---------- Shortcuts ----------
 
@@ -118,4 +121,14 @@ law shared_node_is_written_once:
 # LAW: the output is the last line: every node it uses is written before it.
 law output_is_the_last_line:
   {G.output(G.graph(N.Sin{N.Add{N.Time{}, N.Sin{N.Time{}}}})) == "n3" : String}
+
+# ---------- Scene ----------
+
+# LAW: every thing drawn in the starting scene has a complete material.
+law scene_materials_are_complete:
+  {S.complete(Content.start()) == True{} : Bool}
+
+# LAW: a hidden thing needs no material, so it never makes a scene incomplete.
+law hidden_thing_is_complete:
+  {S.complete(S.Scene{[S.Thing{"empty", Tr.identity(), S.Hidden{}}]}) == True{} : Bool}
 

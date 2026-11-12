@@ -59,7 +59,7 @@
     <section class="layer">
       <h2>Gameplay Foundations</h2>
       <div class="row">
-        <div class="b partial">World</div><div class="b no">Game objects</div><div class="b no">Events &amp; messaging</div><div class="b no">Scripting</div><div class="b partial">Game loop &amp; time</div>
+        <div class="b partial">World</div><div class="b partial">Game objects</div><div class="b no">Events &amp; messaging</div><div class="b no">Scripting</div><div class="b partial">Game loop &amp; time</div>
       </div>
     </section>
 
@@ -134,7 +134,8 @@
     <tr><td>Materials</td><td><code>engine/material.bend</code></td><td>A graph plus values for its parameters (uniforms). Instances share the graph. A law checks each material is complete. No fields to edit values yet.</td></tr>
     <tr><td>Meshes</td><td><code>engine/mesh.bend</code></td><td>Vertices + indices, CCW triangles. A plane generator. No depth test yet.</td></tr>
     <tr><td>Transform</td><td><code>engine/transform.bend</code></td><td>Position, rotation (quaternion), scale; the model matrix T·R·S goes to the GPU as u_model. No parent and child yet.</td></tr>
-    <tr><td>Water</td><td><code>engine/water.bend</code></td><td>Shape (20 m plane, 40 × 40 cells) + material (a one-node graph). Built in place at the origin: no game objects yet.</td></tr>
+    <tr><td>Scene</td><td><code>engine/scene.bend</code>, <code>content/scene.bend</code></td><td>Data-oriented (ECS-style): a scene is a value, a thing is data (name, place, look). Engine types in engine/, the actual scene in content/. No behaviors, no parent and child yet.</td></tr>
+    <tr><td>Water</td><td><code>content/water.bend</code></td><td>Content: the water's shape (20 m plane, 40 × 40 cells) and material (one parameter, tone).</td></tr>
     <tr><td>Time</td><td><code>engine/time.bend</code></td><td>The clock: tick, seek, play, pause. reduce_motion freezes it (a law). Not wired to a frame loop yet.</td></tr>
     <tr><td>Build</td><td><code>tools/dev.ts</code>, <code>package.json</code></td><td>Dev server, bundle, manual deploy to GitHub Pages.</td></tr>
   </table>

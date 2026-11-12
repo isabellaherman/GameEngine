@@ -24,7 +24,7 @@ function restart(file: string) {
   }, 150);
 }
 
-for (const dir of [".", "engine", "editor"]) {
+for (const dir of [".", "engine", "content", "editor"]) {
   watch(dir, { recursive: dir !== "." }, (_, file) => {
     if (file && file.endsWith(".bend") && !file.includes("node_modules")) restart(file);
   });

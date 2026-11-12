@@ -1,13 +1,15 @@
 // The browser side of the engine. It only reads the mouse and draws what
 // Bend returns: the World (engine/world.bend) and the camera
-// (engine/camera.bend) decide every number, engine/shader/glsl.bend writes
-// the shaders and engine/material.bend gives the values of their parameters.
+// (engine/camera.bend) decide every number, the scene (content/scene.bend)
+// says what is in the World, engine/shader/glsl.bend writes the shaders and
+// engine/material.bend gives the values of their parameters.
 
 import { theme } from "bend-ui";
 import { createKeys } from "bend-ui/keys";
 import Keys from "./KEYS.bend";
 import World from "./engine/world.bend";
-import Water from "./engine/water.bend";
+import Scene from "./engine/scene.bend";
+import Content from "./content/scene.bend";
 import Camera from "./engine/camera.bend";
 import Glsl from "./engine/shader/glsl.bend";
 import Material from "./engine/material.bend";
@@ -70,17 +72,6 @@ gl.vertexAttribPointer(pos, 3, gl.FLOAT, false, 24, 0);
 gl.enableVertexAttribArray(col);
 gl.vertexAttribPointer(col, 3, gl.FLOAT, false, 24, 12);
 
-// The water (engine/water.bend): its shape is a mesh built once (3 floats
-// per vertex, 3 indices per triangle); its material is a graph that Bend
-// writes into the shader, plus values for the graph's parameters.
-const waterMat = Water.material();
-const meshProg = program(Glsl.mesh_vert(), Material.frag(waterMat));
-const mu = {
-  vp: gl.getUniformLocation(meshProg, "u_vp"),
-  model: gl.getUniformLocation(meshProg, "u_model"),
-};
-const waterModel = flat(Transform.flat(Water.place()));
-
 // A material's values go to their uniforms; material.bend names each one.
 // Setting a value never compiles anything.
 function setValues(p, values) {
@@ -91,19 +82,38 @@ function setValues(p, values) {
     else if (xs.length === 3) gl.uniform3fv(loc, xs);
   }
 }
-gl.useProgram(meshProg);
-setValues(meshProg, Material.values(waterMat));
-const water = Water.shape();
-const waterIdx = new Uint32Array(flat(water.indices));
-const waterVao = gl.createVertexArray();
-gl.bindVertexArray(waterVao);
-gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
-gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(flat(water.vertices)), gl.STATIC_DRAW);
-const meshPos = gl.getAttribLocation(meshProg, "a_pos");
-gl.enableVertexAttribArray(meshPos);
-gl.vertexAttribPointer(meshPos, 3, gl.FLOAT, false, 12, 0);
-gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gl.createBuffer());
-gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, waterIdx, gl.STATIC_DRAW);
+
+// The scene (content/scene.bend): every thing that is shown gets, once, its
+// shader (from its material), its mesh on the GPU (3 floats per vertex,
+// 3 indices per triangle) and its model matrix (from its place).
+// Limit: built once at start-up; a thing added or moved later is not seen.
+function upload(thing) {
+  const look = Scene.look(thing);
+  const material = Scene.material(look);
+  const shape = Scene.shape(look);
+  const p = program(Glsl.mesh_vert(), Material.frag(material));
+  gl.useProgram(p);
+  setValues(p, Material.values(material));
+  const idx = new Uint32Array(flat(shape.indices));
+  const vao = gl.createVertexArray();
+  gl.bindVertexArray(vao);
+  gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(flat(shape.vertices)), gl.STATIC_DRAW);
+  const at = gl.getAttribLocation(p, "a_pos");
+  gl.enableVertexAttribArray(at);
+  gl.vertexAttribPointer(at, 3, gl.FLOAT, false, 12, 0);
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gl.createBuffer());
+  gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, idx, gl.STATIC_DRAW);
+  return {
+    prog: p, vao, count: idx.length,
+    vp: gl.getUniformLocation(p, "u_vp"),
+    model: gl.getUniformLocation(p, "u_model"),
+    matrix: flat(Transform.flat(Scene.place(thing))),
+  };
+}
+
+const scene = Content.start();
+const shown = flat(Scene.things(scene)).filter((t) => Scene.is_shown(t)).map(upload);
 
 const [skyR, skyG, skyB] = flat(World.sky());
 
@@ -138,13 +148,16 @@ function draw() {
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   gl.enable(gl.BLEND);
   gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-  // The water first, then the grid over it: both lie on y = 0, so
-  // drawing order decides who shows (there is no depth test yet).
-  gl.useProgram(meshProg);
-  gl.uniformMatrix4fv(mu.vp, false, frame.slice(0, 16));
-  gl.uniformMatrix4fv(mu.model, false, waterModel);
-  gl.bindVertexArray(waterVao);
-  gl.drawElements(gl.TRIANGLES, waterIdx.length, gl.UNSIGNED_INT, 0);
+  // The scene's things first, in order, then the grid over them: the water
+  // lies on y = 0 with the grid, so drawing order decides who shows (there
+  // is no depth test yet).
+  for (const t of shown) {
+    gl.useProgram(t.prog);
+    gl.uniformMatrix4fv(t.vp, false, frame.slice(0, 16));
+    gl.uniformMatrix4fv(t.model, false, t.matrix);
+    gl.bindVertexArray(t.vao);
+    gl.drawElements(gl.TRIANGLES, t.count, gl.UNSIGNED_INT, 0);
+  }
   gl.useProgram(prog);
   gl.uniformMatrix4fv(u.vp, false, frame.slice(0, 16));
   gl.uniform3fv(u.eye, frame.slice(16, 19));
