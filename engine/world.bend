@@ -14,6 +14,7 @@ import Base
 import ./vec.bend as V
 import ./color.bend as C
 import ./camera.bend as Cam
+import ./mesh.bend as M
 import ../node_modules/bend-ui/TOKENS.bend as T
 
 # An axis of the World: its name, where it points, and its tone (a Bend-UI
@@ -98,3 +99,21 @@ def fade(+cam: Cam.Cam) -> List<F32>:
   Cam.Cam{_, _, _, +d} = cam
   +h = U32.to_f32(half())
   [F32.min((d * 2.0 : F32), (h * 0.5 : F32)), F32.min((d * 6.0 : F32), h)]
+
+# The water's place: a 20 m square on the ground at the origin, cut into
+# 40 × 40 cells (half a meter each). For now it is a flat surface in the
+# surface tone; the water's material comes later (engine/materials/).
+#
+# Limits now: one flat color and no light, so the 3200 triangles do not
+# show one by one; they will once the water moves its vertices. It lies on
+# y = 0 with the grid, and only the drawing order (main.js) keeps the grid
+# on top.
+def water_size() -> F32: 20.0
+def water_cells() -> U32: 40
+
+def water() -> M.Mesh:
+  M.plane(water_size(), water_cells())
+
+def water_tone() -> List<F32>:
+  +c = C.rgb(T.dark_surface_2())
+  [V.x(c), V.y(c), V.z(c)]

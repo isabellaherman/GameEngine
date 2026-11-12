@@ -59,7 +59,7 @@
     <section class="layer">
       <h2>Gameplay Foundations</h2>
       <div class="row">
-        <div class="b partial">World</div><div class="b no">Game objects</div><div class="b no">Events &amp; messaging</div><div class="b no">Scripting</div><div class="b no">Game loop &amp; time</div>
+        <div class="b partial">World</div><div class="b no">Game objects</div><div class="b no">Events &amp; messaging</div><div class="b no">Scripting</div><div class="b partial">Game loop &amp; time</div>
       </div>
     </section>
 
@@ -75,7 +75,7 @@
     </section>
 
     <div class="split" style="--n: 4">
-      <section class="layer"><h2>Low-Level Renderer</h2><div class="row"><div class="b partial">Line renderer</div><div class="b yes">Camera</div><div class="b no">Meshes</div><div class="b no">Materials</div><div class="b no">Lights</div></div></section>
+      <section class="layer"><h2>Low-Level Renderer</h2><div class="row"><div class="b partial">Line renderer</div><div class="b yes">Camera</div><div class="b partial">Shaders</div><div class="b partial">Meshes</div><div class="b no">Materials</div><div class="b no">Lights</div></div></section>
       <section class="layer"><h2>Human Interface Devices</h2><div class="row"><div class="b partial">Mouse</div><div class="b partial">Keyboard</div><div class="b no">Gamepad</div></div></section>
       <section class="layer"><h2>Collision &amp; Physics</h2><div class="row"><div class="b no">Collision</div><div class="b no">Rigid bodies</div></div></section>
       <section class="layer"><h2>Audio · Online · Profiling</h2><div class="row"><div class="b no">Audio</div><div class="b no">Multiplayer</div><div class="b no">Profiling &amp; debug</div></div></section>
@@ -130,6 +130,9 @@
     <tr><td>Keyboard</td><td><code>KEYS.bend</code>, <code>LAWS.bend</code></td><td>Keys 1–4; laws prevent overlaps.</td></tr>
     <tr><td>Accessibility</td><td><code>editor/defaults/ACCESSIBILITY.bend</code></td><td>reduce_motion.</td></tr>
     <tr><td>Colors</td><td><code>engine/color.bend</code></td><td>Bend-UI tokens as RGB.</td></tr>
+    <tr><td>Shaders</td><td><code>engine/shader/glsl.bend</code></td><td>Bend writes the GLSL text; main.js only hands it to the driver. Line shaders and a one-color mesh shader. No graph yet.</td></tr>
+    <tr><td>Meshes</td><td><code>engine/mesh.bend</code>, <code>engine/world.bend</code></td><td>Vertices + indices, CCW triangles. A plane generator; the water's place is a 20 m plane of 40 × 40 cells. No depth test yet.</td></tr>
+    <tr><td>Time</td><td><code>engine/time.bend</code></td><td>The clock: tick, seek, play, pause. reduce_motion freezes it (a law). Not wired to a frame loop yet.</td></tr>
     <tr><td>Build</td><td><code>tools/dev.ts</code>, <code>package.json</code></td><td>Dev server, bundle, manual deploy to GitHub Pages.</td></tr>
   </table>
 </main>

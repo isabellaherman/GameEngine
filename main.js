@@ -1,17 +1,20 @@
 // The browser side of the engine. It only reads the mouse and draws what
 // Bend returns: the World (engine/world.bend) and the camera
-// (engine/camera.bend) decide every number.
+// (engine/camera.bend) decide every number, and engine/shader/glsl.bend
+// writes the shaders.
 
 import { theme } from "bend-ui";
 import { createKeys } from "bend-ui/keys";
 import Keys from "./KEYS.bend";
 import World from "./engine/world.bend";
 import Camera from "./engine/camera.bend";
+import Glsl from "./engine/shader/glsl.bend";
 import { mountDefaults } from "./editor/defaults/defaults.js";
 
 theme({ mode: "dark", radius: "pill" });   // every button and segmented in the layout is a pill
 
 // A Bend list arrives as cons cells; the GPU wants a flat array.
+// Limit: this copies every number once; fine at start-up, too slow per frame.
 const flat = (list) => {
   const out = [];
   for (let l = list; l.$ === "Con"; l = l.tail) out.push(l.head);
@@ -24,30 +27,8 @@ const flat = (list) => {
 const canvas = document.getElementById("scene");
 const gl = canvas.getContext("webgl2", { antialias: true });
 
-const VERT = `#version 300 es
-uniform mat4 u_vp;
-in vec3 a_pos;
-in vec3 a_col;
-out vec3 v_pos;
-out vec3 v_col;
-void main() {
-  v_pos = a_pos;
-  v_col = a_col;
-  gl_Position = u_vp * vec4(a_pos, 1.0);
-}`;
-
-const FRAG = `#version 300 es
-precision highp float;
-uniform vec3 u_eye;
-uniform vec2 u_fade;
-in vec3 v_pos;
-in vec3 v_col;
-out vec4 color;
-void main() {
-  float a = 1.0 - smoothstep(u_fade.x, u_fade.y, distance(v_pos, u_eye));
-  color = vec4(v_col, a);
-}`;
-
+// The shaders are written by Bend (engine/shader/glsl.bend); JS only hands
+// the text to the GPU driver.
 function shader(type, src) {
   const s = gl.createShader(type);
   gl.shaderSource(s, src);
@@ -56,11 +37,16 @@ function shader(type, src) {
   return s;
 }
 
-const prog = gl.createProgram();
-gl.attachShader(prog, shader(gl.VERTEX_SHADER, VERT));
-gl.attachShader(prog, shader(gl.FRAGMENT_SHADER, FRAG));
-gl.linkProgram(prog);
-if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(prog));
+function program(vert, frag) {
+  const p = gl.createProgram();
+  gl.attachShader(p, shader(gl.VERTEX_SHADER, vert));
+  gl.attachShader(p, shader(gl.FRAGMENT_SHADER, frag));
+  gl.linkProgram(p);
+  if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p));
+  return p;
+}
+
+const prog = program(Glsl.line_vert(), Glsl.line_frag());
 
 const u = {
   vp: gl.getUniformLocation(prog, "u_vp"),
@@ -80,6 +66,26 @@ gl.enableVertexAttribArray(pos);
 gl.vertexAttribPointer(pos, 3, gl.FLOAT, false, 24, 0);
 gl.enableVertexAttribArray(col);
 gl.vertexAttribPointer(col, 3, gl.FLOAT, false, 24, 12);
+
+// The water's place: a mesh built once by world.bend (3 floats per vertex,
+// 3 indices per triangle), drawn in one color.
+const meshProg = program(Glsl.mesh_vert(), Glsl.mesh_frag());
+const mu = {
+  vp: gl.getUniformLocation(meshProg, "u_vp"),
+  color: gl.getUniformLocation(meshProg, "u_color"),
+};
+const water = World.water();
+const waterIdx = new Uint32Array(flat(water.indices));
+const waterVao = gl.createVertexArray();
+gl.bindVertexArray(waterVao);
+gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(flat(water.vertices)), gl.STATIC_DRAW);
+const meshPos = gl.getAttribLocation(meshProg, "a_pos");
+gl.enableVertexAttribArray(meshPos);
+gl.vertexAttribPointer(meshPos, 3, gl.FLOAT, false, 12, 0);
+gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gl.createBuffer());
+gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, waterIdx, gl.STATIC_DRAW);
+const waterTone = flat(World.water_tone());
 
 const [skyR, skyG, skyB] = flat(World.sky());
 
@@ -114,6 +120,13 @@ function draw() {
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   gl.enable(gl.BLEND);
   gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+  // The water's place first, then the grid over it: both lie on y = 0, so
+  // drawing order decides who shows (there is no depth test yet).
+  gl.useProgram(meshProg);
+  gl.uniformMatrix4fv(mu.vp, false, frame.slice(0, 16));
+  gl.uniform3fv(mu.color, waterTone);
+  gl.bindVertexArray(waterVao);
+  gl.drawElements(gl.TRIANGLES, waterIdx.length, gl.UNSIGNED_INT, 0);
   gl.useProgram(prog);
   gl.uniformMatrix4fv(u.vp, false, frame.slice(0, 16));
   gl.uniform3fv(u.eye, frame.slice(16, 19));
