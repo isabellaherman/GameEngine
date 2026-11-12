@@ -21,6 +21,14 @@ def tol() -> F32: 0.0001
 def close(+a: F32, +b: F32) -> Bool:
   F32.is_lt(F32.abs((a - b : F32)), tol())
 
+# Degrees come back through sines and cosines, so they are compared to
+# within 0.01°.
+def closed(+a: F32, +b: F32) -> Bool:
+  F32.is_lt(F32.abs((a - b : F32)), 0.01)
+
+def close3d(+a: V.V3, +b: V.V3) -> Bool:
+  (closed(V.x(a), V.x(b)) && closed(V.y(a), V.y(b)) && closed(V.z(a), V.z(b)))
+
 def close3(+a: V.V3, +b: V.V3) -> Bool:
   (close(V.x(a), V.x(b)) && close(V.y(a), V.y(b)) && close(V.z(a), V.z(b)))
 
@@ -68,4 +76,14 @@ def checks() -> List<&2, Check>:
    Check{"nlerp halfway between a turn and itself is that turn",
      same_turn(Q.nlerp(tilted(), tilted(), 0.5), tilted())},
    Check{"slerp between two almost equal turns stays length 1",
-     close(Q.length(Q.slerp(tilted(), Q.mul(tilted(), Q.axis_angle(up(), 0.00001)), 0.5)), 1.0)}]
+     close(Q.length(Q.slerp(tilted(), Q.mul(tilted(), Q.axis_angle(up(), 0.00001)), 0.5)), 1.0)},
+   Check{"degrees: a quarter around Y is the same turn as axis_angle",
+     same_turn(Q.from_degrees(V.V3{0.0, 90.0, 0.0}), quarter())},
+   Check{"degrees: Z first, then X, then Y",
+     same_turn(Q.from_degrees(V.V3{20.0, 30.0, 40.0}), Q.mul(Q.axis_angle(up(), 0.5235988), Q.mul(Q.axis_angle(right(), 0.34906584), Q.axis_angle(V.V3{0.0, 0.0, 1.0}, 0.6981317))))},
+   Check{"degrees come back as typed (30, -45, 60)",
+     close3d(Q.to_degrees(Q.from_degrees(V.V3{30.0, (0.0 - 45.0 : F32), 60.0})), V.V3{30.0, (0.0 - 45.0 : F32), 60.0})},
+   Check{"degrees come back as typed (-10, 170, -120)",
+     close3d(Q.to_degrees(Q.from_degrees(V.V3{(0.0 - 10.0 : F32), 170.0, (0.0 - 120.0 : F32)})), V.V3{(0.0 - 10.0 : F32), 170.0, (0.0 - 120.0 : F32)})},
+   Check{"no rotation is 0, 0, 0 degrees",
+     close3d(Q.to_degrees(Q.identity()), V.V3{0.0, 0.0, 0.0})}]

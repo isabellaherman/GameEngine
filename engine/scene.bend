@@ -85,6 +85,45 @@ def material(l: Look) -> Mat.Material:
     case Hidden{}:
       Mat.Material{N.Rgb{0.0, 0.0, 0.0}, Nil{}}
 
+def pick_thing(c: Bool, a: Thing, b: Thing) -> Thing:
+  match c:
+    case True{}:
+      a
+    case False{}:
+      b
+
+def pick_list(c: Bool, a: List<&2, Thing>, b: List<&2, Thing>) -> List<&2, Thing>:
+  match c:
+    case True{}:
+      a
+    case False{}:
+      b
+
+# Thing i of a list (the first is 0). Past the end: a hidden thing with no
+# name, so a wrong index never breaks the editor.
+def at_go(xs: List<&2, Thing>, +i: U32) -> Thing:
+  match xs:
+    case Nil{}:
+      Thing{"", Tr.identity(), Hidden{}}
+    case +h <> +t:
+      pick_thing(U32.is_eq(i, 0), h, at_go(t, (i - 1 : U32)))
+
+def at(s: Scene, +i: U32) -> Thing:
+  Scene{xs} = s
+  at_go(xs, i)
+
+# The same list with thing i replaced. Past the end, nothing changes.
+def put_go(xs: List<&2, Thing>, +i: U32, +x: Thing) -> List<&2, Thing>:
+  match xs:
+    case Nil{}:
+      Nil{}
+    case +h <> +t:
+      pick_list(U32.is_eq(i, 0), x <> t, h <> put_go(t, (i - 1 : U32), x))
+
+def put(s: Scene, +i: U32, +x: Thing) -> Scene:
+  Scene{xs} = s
+  Scene{put_go(xs, i, x)}
+
 def count(s: Scene) -> Nat:
   Scene{xs} = s
   List.length(&2, Thing, xs)

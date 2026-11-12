@@ -1,0 +1,29 @@
+Bend-UI requests
+
+Things GameEngine needed that Bend-UI does not have yet. Until they exist,
+the engine uses the closest Bend-UI piece, and each place says so in its
+"Limits now" comments.
+
+
+1. A selectable list, and a tree
+
+   For the Outliner (editor/outliner/): a list where one item is selected,
+   with the right semantics (listbox / option with aria-selected, or a tree
+   with treeitem for parent and child), arrow keys to move, and a selected
+   style. Today the engine uses ghost toggle buttons (aria-pressed), which
+   read as "pressed", not "selected".
+
+2. A color input
+
+   For material colors in the Details panel: a field that shows the color
+   and edits it (a swatch plus R, G, B or hex), in the field sizes. Today a
+   color is three number fields from 0 to 1.
+
+3. An app-level reduce-motion switch
+
+   GameEngine has its own Reduce motion setting
+   (editor/defaults/ACCESSIBILITY.bend), on even when the system's is off.
+   Bend-UI only follows the system's prefers-reduced-motion. A switch on
+   the root (for example data-motion="reduce") that turns off every Bend-UI
+   transition would let the engine pass its setting on. Today the engine
+   turns off the disclosure chevron's transition by hand.

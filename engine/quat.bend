@@ -23,8 +23,13 @@
 # - Nothing renormalizes on its own: many mul calls in a row slowly drift
 #   from length 1. normalize() fixes it; callers that chain rotations every
 #   frame must call it.
-# - No conversion from or to yaw/pitch/roll yet. The editor camera keeps its
-#   own angles (camera.bend) and does not use this file.
+# - Degrees per axis (from_degrees, to_degrees) are for people, in the
+#   editor. Near ±90° around X the other two axes line up (gimbal lock), and
+#   to_degrees may split one turn between Y and Z differently from how it
+#   was typed; the rotation itself stays right. Unity's inspector has the
+#   same behavior.
+# - The editor camera keeps its own angles (camera.bend) and does not use
+#   this file.
 
 import Base
 import ./vec.bend as V
@@ -148,3 +153,50 @@ def slerp(+a: Q, b: Q, +t: F32) -> Q:
   +c = near(a, b)
   +d = dot(a, c)
   arc(a, c, t, d, F32.is_gt(d, 0.9995))
+
+# Degrees per axis
+# ================
+# How a person reads and types a rotation in the editor: degrees around X,
+# Y and Z. Applied in Unity's order: Z first, then X, then Y.
+
+def pi() -> F32: 3.1415927
+
+def to_radians(+d: F32) -> F32:
+  (d * 0.017453292 : F32)
+
+def to_deg(+r: F32) -> F32:
+  (r * 57.29578 : F32)
+
+def pickf(c: Bool, a: F32, b: F32) -> F32:
+  match c:
+    case True{}:
+      a
+    case False{}:
+      b
+
+# The angle of the point (x, y) from the X axis, in -π..π, for every
+# quadrant (F32.atan alone only knows half of them).
+def atan2(+y: F32, +x: F32) -> F32:
+  +a = F32.atan((y / x : F32))
+  pickf(F32.is_gt(x, 0.0), a,
+  pickf((F32.is_lt(x, 0.0) && F32.is_ge(y, 0.0)), (a + pi() : F32),
+  pickf(F32.is_lt(x, 0.0), (a - pi() : F32),
+  pickf(F32.is_gt(y, 0.0), (pi() / 2.0 : F32),
+  pickf(F32.is_lt(y, 0.0), (0.0 - pi() / 2.0 : F32), 0.0)))))
+
+# Degrees around X, Y, Z (each turn applied in the order Z, X, Y).
+def from_degrees(+d: V.V3) -> Q:
+  +qx = axis_angle(V.V3{1.0, 0.0, 0.0}, to_radians(V.x(d)))
+  +qy = axis_angle(V.V3{0.0, 1.0, 0.0}, to_radians(V.y(d)))
+  +qz = axis_angle(V.V3{0.0, 0.0, 1.0}, to_radians(V.z(d)))
+  mul(qy, mul(qx, qz))
+
+# Back to degrees around X, Y, Z, read from the rotation's matrix.
+def to_degrees(q: Q) -> V.V3:
+  Q{+x, +y, +z, +w} = q
+  +sx = F32.clamp((0.0 - 2.0 * (y * z - w * x) : F32), (0.0 - 1.0 : F32), 1.0)
+  V.V3{
+    to_deg(F32.asin(sx)),
+    to_deg(atan2((2.0 * (x * z + w * y) : F32), (1.0 - 2.0 * (x * x + y * y) : F32))),
+    to_deg(atan2((2.0 * (x * y + w * z) : F32), (1.0 - 2.0 * (x * x + z * z) : F32)))}
+

@@ -126,7 +126,7 @@
     <tr><td>Math library</td><td><code>engine/vec.bend</code>, <code>engine/quat.bend</code></td><td>V3, V4, M4 (<code>vec.bend</code>); quaternions: axis-angle, mul, rotate, matrix, nlerp, slerp (<code>quat.bend</code>). Float math is tested numerically in <code>tests/</code>, since laws cannot compute floats.</td></tr>
     <tr><td>Camera</td><td><code>engine/camera.bend</code></td><td>Orbit, pan, zoom, look-at, perspective.</td></tr>
     <tr><td>Line renderer</td><td><code>main.js</code></td><td>WebGL2, one shader, lines only. Bend computes; JS draws.</td></tr>
-    <tr><td>Editor UI</td><td><code>editor/defaults/</code>, <code>index.html</code></td><td>Axis gizmo and info dropdown, Bend-UI.</td></tr>
+    <tr><td>Editor UI</td><td><code>editor/defaults/</code>, <code>editor/outliner/</code>, <code>index.html</code></td><td>Axis gizmo and info dropdown; Outliner + Details (Unreal layout): lists the scene, edits a thing's transform and material values live. Bend-UI only; requests in <code>docs/bend-ui-requests.txt</code>.</td></tr>
     <tr><td>Keyboard</td><td><code>KEYS.bend</code>, <code>LAWS.bend</code></td><td>Keys 1–4; laws prevent overlaps.</td></tr>
     <tr><td>Accessibility</td><td><code>editor/defaults/ACCESSIBILITY.bend</code></td><td>reduce_motion.</td></tr>
     <tr><td>Colors</td><td><code>engine/color.bend</code></td><td>Bend-UI tokens as RGB.</td></tr>

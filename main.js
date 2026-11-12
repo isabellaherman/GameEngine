@@ -15,6 +15,8 @@ import Glsl from "./engine/shader/glsl.bend";
 import Material from "./engine/material.bend";
 import Transform from "./engine/transform.bend";
 import { mountDefaults } from "./editor/defaults/defaults.js";
+import { mountOutliner } from "./editor/outliner/outliner.js";
+import Outliner from "./editor/outliner/outliner.bend";
 
 theme({ mode: "dark", radius: "pill" });   // every button and segmented in the layout is a pill
 
@@ -86,7 +88,8 @@ function setValues(p, values) {
 // The scene (content/scene.bend): every thing that is shown gets, once, its
 // shader (from its material), its mesh on the GPU (3 floats per vertex,
 // 3 indices per triangle) and its model matrix (from its place).
-// Limit: built once at start-up; a thing added or moved later is not seen.
+// Limit: built once at start-up; a thing added later is not seen (an edit
+// of place or values is: see edit() below).
 function upload(thing) {
   const look = Scene.look(thing);
   const material = Scene.material(look);
@@ -112,8 +115,25 @@ function upload(thing) {
   };
 }
 
-const scene = Content.start();
-const shown = flat(Scene.things(scene)).filter((t) => Scene.is_shown(t)).map(upload);
+let scene = Content.start();
+// Each shown thing, by its place in the scene's list.
+const shown = new Map();
+flat(Scene.things(scene)).forEach((t, i) => { if (Scene.is_shown(t)) shown.set(i, upload(t)); });
+
+// An edit in the Details panel: outliner.bend gives the next scene; the GPU
+// gets the thing's new matrix and values. The graph never changes, so no
+// shader is compiled.
+function edit(i, e, value) {
+  scene = Outliner.apply(scene, i, e, value);
+  const g = shown.get(i);
+  if (g) {
+    const thing = Scene.at(scene, i);
+    g.matrix = flat(Transform.flat(Scene.place(thing)));
+    gl.useProgram(g.prog);
+    setValues(g.prog, Material.values(Scene.material(Scene.look(thing))));
+  }
+  redraw();
+}
 
 const [skyR, skyG, skyB] = flat(World.sky());
 
@@ -127,6 +147,13 @@ const defaults = mountDefaults(document.getElementById("editor-defaults"), {
   getCam: () => cam,
   setCam: (c) => { cam = c; redraw(); },
   orbit: (c, dx, dy) => Camera.orbit(c, dx, dy),
+});
+
+// Outliner and Details (editor/outliner/): the scene's things and the
+// selected one's components.
+mountOutliner(document.getElementById("editor-panels"), {
+  getScene: () => scene,
+  edit,
 });
 
 // Shortcuts: the keymap and what each view looks from are KEYS.bend.
@@ -151,7 +178,7 @@ function draw() {
   // The scene's things first, in order, then the grid over them: the water
   // lies on y = 0 with the grid, so drawing order decides who shows (there
   // is no depth test yet).
-  for (const t of shown) {
+  for (const t of shown.values()) {
     gl.useProgram(t.prog);
     gl.uniformMatrix4fv(t.vp, false, frame.slice(0, 16));
     gl.uniformMatrix4fv(t.model, false, t.matrix);
