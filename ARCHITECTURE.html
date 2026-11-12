@@ -123,7 +123,7 @@
   <table>
     <tr><th>Part</th><th>Files</th><th>State</th></tr>
     <tr><td>World</td><td><code>engine/world.bend</code></td><td>Origin, Y up, right-handed, 1 unit = 1 m, ground grid. No objects.</td></tr>
-    <tr><td>Math library</td><td><code>engine/vec.bend</code></td><td>V3, V4, M4. No quaternions.</td></tr>
+    <tr><td>Math library</td><td><code>engine/vec.bend</code>, <code>engine/quat.bend</code></td><td>V3, V4, M4 (<code>vec.bend</code>); quaternions: axis-angle, mul, rotate, matrix, nlerp, slerp (<code>quat.bend</code>). Float math is tested numerically in <code>tests/</code>, since laws cannot compute floats.</td></tr>
     <tr><td>Camera</td><td><code>engine/camera.bend</code></td><td>Orbit, pan, zoom, look-at, perspective.</td></tr>
     <tr><td>Line renderer</td><td><code>main.js</code></td><td>WebGL2, one shader, lines only. Bend computes; JS draws.</td></tr>
     <tr><td>Editor UI</td><td><code>editor/defaults/</code>, <code>index.html</code></td><td>Axis gizmo and info dropdown, Bend-UI.</td></tr>

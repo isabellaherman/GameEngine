@@ -81,3 +81,8 @@ def y(v: V3) -> F32:
 def z(v: V3) -> F32:
   V3{_, _, c} = v
   c
+
+# The x, y, z of a 4-vector (dropping w).
+def xyz(v: V4) -> V3:
+  V4{a, b, c, _} = v
+  V3{a, b, c}
