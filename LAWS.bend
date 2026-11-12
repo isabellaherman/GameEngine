@@ -14,7 +14,7 @@ import ./content/water.bend as Water
 import ./engine/scene.bend as S
 import ./engine/transform.bend as Tr
 import ./content/scene.bend as Content
-import ./editor/outliner/outliner.bend as O
+import ./editor/panels/panels.bend as O
 import ./engine/vec.bend as V
 
 # ---------- Shortcuts ----------
@@ -134,12 +134,12 @@ law scene_materials_are_complete:
 law hidden_thing_is_complete:
   {S.complete(S.Scene{[S.Thing{"empty", Tr.identity(), S.Hidden{}}]}) == True{} : Bool}
 
-# ---------- Outliner and Details ----------
+# ---------- Scene and Details panels ----------
 # Laws that edit use a one-cell plane: the checker works every list out in
 # full, and the real water's 1681 vertices overflow its stack.
 
-# LAW: the Outliner lists the scene's things by name, in order.
-law outliner_lists_the_scene:
+# LAW: the Scene panel lists the scene's things by name, in order.
+law scene_panel_lists_the_scene:
   {O.names(Content.start()) == ["Water"] : List<&2, String>}
 
 # LAW: a shown thing has a Transform section and a Material section.

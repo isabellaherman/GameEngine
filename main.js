@@ -15,8 +15,8 @@ import Glsl from "./engine/shader/glsl.bend";
 import Material from "./engine/material.bend";
 import Transform from "./engine/transform.bend";
 import { mountDefaults } from "./editor/defaults/defaults.js";
-import { mountOutliner } from "./editor/outliner/outliner.js";
-import Outliner from "./editor/outliner/outliner.bend";
+import { mountPanels } from "./editor/panels/panels.js";
+import Panels from "./editor/panels/panels.bend";
 
 theme({ mode: "dark", radius: "pill" });   // every button and segmented in the layout is a pill
 
@@ -120,11 +120,11 @@ let scene = Content.start();
 const shown = new Map();
 flat(Scene.things(scene)).forEach((t, i) => { if (Scene.is_shown(t)) shown.set(i, upload(t)); });
 
-// An edit in the Details panel: outliner.bend gives the next scene; the GPU
+// An edit in the Details panel: panels.bend gives the next scene; the GPU
 // gets the thing's new matrix and values. The graph never changes, so no
 // shader is compiled.
 function edit(i, e, value) {
-  scene = Outliner.apply(scene, i, e, value);
+  scene = Panels.apply(scene, i, e, value);
   const g = shown.get(i);
   if (g) {
     const thing = Scene.at(scene, i);
@@ -149,9 +149,9 @@ const defaults = mountDefaults(document.getElementById("editor-defaults"), {
   orbit: (c, dx, dy) => Camera.orbit(c, dx, dy),
 });
 
-// Outliner and Details (editor/outliner/): the scene's things and the
+// The Scene and Details panels (editor/panels/): the scene's things and the
 // selected one's components.
-mountOutliner(document.getElementById("editor-panels"), {
+mountPanels(document.getElementById("editor-panels"), {
   getScene: () => scene,
   edit,
 });

@@ -7,11 +7,12 @@ the engine uses the closest Bend-UI piece, and each place says so in its
 
 1. A selectable list, and a tree
 
-   For the Outliner (editor/outliner/): a list where one item is selected,
-   with the right semantics (listbox / option with aria-selected, or a tree
-   with treeitem for parent and child), arrow keys to move, and a selected
-   style. Today the engine uses ghost toggle buttons (aria-pressed), which
-   read as "pressed", not "selected".
+   For the Scene panel (editor/panels/), the editor's list of every thing:
+   a list where one item is selected, with the right semantics (listbox /
+   option with aria-selected, or a tree with treeitem for parent and
+   child), arrow keys to move, and a selected style. Today the engine uses
+   ghost toggle buttons (aria-pressed), which read as "pressed", not
+   "selected".
 
 2. A color input
 

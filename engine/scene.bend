@@ -8,7 +8,7 @@
 # things in parallel.
 #
 # A thing has:
-# - a name, shown in the editor (the Outliner);
+# - a name, shown in the editor (the Scene panel);
 # - a place (engine/transform.bend): where it is, how it is turned, its size;
 # - a look: Shown with a shape (a mesh) and a material, or Hidden for a
 #   thing that is not drawn.

@@ -1,10 +1,11 @@
-# Outliner and Details: the editor's view of the scene, as in Unreal.
+# The Scene and Details panels: the editor's view of the scene.
+# (Unreal calls them Outliner and Details; Unity, Hierarchy and Inspector.)
 #
-# The Outliner lists every thing in the scene by name. The Details panel
+# The Scene panel lists every thing in the scene by name. The Details panel
 # shows the selected thing's components as sections of fields: its
 # Transform (position, rotation in degrees, scale) and, when it is shown,
 # its Material's values. Typing a value gives back a new scene with that
-# one value changed (apply); outliner.js only draws what this file returns
+# one value changed (apply); panels.js only draws what this file returns
 # and passes the typed numbers back.
 #
 # The scene stays data (engine/scene.bend): the panels are a way of seeing
@@ -21,7 +22,7 @@
 # - The list is flat: no parent and child yet, so no tree.
 # - No undo, no adding, removing, renaming or reordering things.
 # - Selecting a thing in the viewport (clicking it) does not exist; only the
-#   Outliner selects.
+#   Scene panel selects.
 
 import Base
 import ../../engine/vec.bend as V
@@ -51,8 +52,8 @@ type Row is Data:
 type Section is Data:
   Section{title: String, rows: List<&2, Row>}
 
-# Outliner
-# ========
+# Scene panel
+# ===========
 
 def names_go(xs: List<&2, S.Thing>) -> List<&2, String>:
   match xs:
@@ -61,7 +62,7 @@ def names_go(xs: List<&2, S.Thing>) -> List<&2, String>:
     case h <> t:
       S.name(h) <> names_go(t)
 
-# The Outliner's rows: every thing's name, in the scene's order.
+# The Scene panel's rows: every thing's name, in the scene's order.
 def names(s: S.Scene) -> List<&2, String>:
   names_go(S.things(s))
 

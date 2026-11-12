@@ -1,7 +1,7 @@
-// Outliner and Details on screen, stacked on the right as in Unreal. It draws
-// what outliner.bend returns (the names, the sections and their fields) with
+// The Scene and Details panels on screen, stacked on the right as in Unreal. It draws
+// what panels.bend returns (the names, the sections and their fields) with
 // Bend-UI pieces (panel, ghost buttons, disclosure, field, input), and hands
-// typed numbers back to outliner.bend, which gives the next scene.
+// typed numbers back to panels.bend, which gives the next scene.
 //
 // Limits now:
 // - The selected thing is shown as a pressed toggle button: Bend-UI has no
@@ -9,7 +9,7 @@
 // - Values are not drawn again while you type, so the field you are in
 //   keeps its focus; they are drawn again when you leave the field.
 
-import O from "./outliner.bend";
+import O from "./panels.bend";
 import D from "../defaults/defaults.bend";
 
 const list = (l) => {
@@ -28,19 +28,19 @@ const el = (tag, cls, text) => {
 const still = matchMedia("(prefers-reduced-motion: reduce)");
 
 // ui: { getScene(), edit(index, edit, value) }
-export function mountOutliner(root, ui) {
+export function mountPanels(root, ui) {
   let selected = 0;
   let uid = 0;
 
-  const outliner = el("section", "panel editor-panels__outliner");
-  outliner.setAttribute("aria-labelledby", "outliner-title");
+  const scenePanel = el("section", "panel editor-panels__scene");
+  scenePanel.setAttribute("aria-labelledby", "scene-panel-title");
   const oHead = el("div", "panel__header");
-  const oTitle = el("span", "", "Outliner");
-  oTitle.id = "outliner-title";
+  const oTitle = el("span", "", "Scene");
+  oTitle.id = "scene-panel-title";
   const oCount = el("span", "meta");
   oHead.append(oTitle, oCount);
   const oBody = el("div", "panel__body editor-panels__list");
-  outliner.append(oHead, oBody);
+  scenePanel.append(oHead, oBody);
 
   const details = el("section", "panel editor-panels__details");
   details.setAttribute("aria-labelledby", "details-title");
@@ -52,9 +52,9 @@ export function mountOutliner(root, ui) {
   const dBody = el("div", "panel__body editor-panels__body");
   details.append(dHead, dBody);
 
-  root.append(outliner, details);
+  root.append(scenePanel, details);
 
-  function drawOutliner() {
+  function drawScene() {
     const names = list(O.names(ui.getScene()));
     oCount.textContent = String(names.length);
     oBody.replaceChildren();
@@ -62,7 +62,7 @@ export function mountOutliner(root, ui) {
       const b = el("button", "btn btn--ghost btn--toggle editor-panels__item", name);
       b.type = "button";
       b.setAttribute("aria-pressed", String(i === selected));
-      b.addEventListener("click", () => { selected = i; drawOutliner(); drawDetails(); });
+      b.addEventListener("click", () => { selected = i; drawScene(); drawDetails(); });
       oBody.append(b);
     });
     if (!names.length) oBody.append(el("p", "meta", "The scene is empty."));
@@ -115,6 +115,6 @@ export function mountOutliner(root, ui) {
     }
   }
 
-  drawOutliner();
+  drawScene();
   drawDetails();
 }

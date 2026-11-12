@@ -15,9 +15,9 @@
   .editor-defaults__row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); }
   .editor-defaults__readonly { align-self: flex-start; }
   .editor-defaults__readonly > button { pointer-events: none; }   /* it shows the state; ACCESSIBILITY.bend sets it */
-  /* Outliner and Details: stacked on the right of the viewport, as in Unreal. */
+  /* Scene and Details panels: stacked on the right of the viewport, as in Unreal. */
   .editor-panels { width: var(--side-width); flex: none; display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-2); min-height: 0; border-left: var(--border-width) solid var(--border); background: var(--bg); }
-  .editor-panels__outliner { flex: none; max-height: 40%; display: flex; flex-direction: column; min-height: 0; }
+  .editor-panels__scene { flex: none; max-height: 40%; display: flex; flex-direction: column; min-height: 0; }
   .editor-panels__details { flex: 1; display: flex; flex-direction: column; min-height: 0; }
   .editor-panels__list, .editor-panels__body { overflow: auto; min-height: 0; padding: var(--space-2); display: flex; flex-direction: column; gap: var(--space-1); }
   .editor-panels__item { justify-content: flex-start; width: 100%; }
@@ -35,7 +35,7 @@
       </main>
       <aside class="editor-defaults" id="editor-defaults" aria-label="Editor Defaults"></aside>
     </div>
-    <aside class="editor-panels" id="editor-panels" aria-label="Scene"></aside>
+    <aside class="editor-panels" id="editor-panels" aria-label="Scene and Details"></aside>
   </div>
 </body>
 </html>

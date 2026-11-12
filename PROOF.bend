@@ -72,7 +72,7 @@ def Laws.scene_materials_are_complete():
 def Laws.hidden_thing_is_complete():
   {==}
 
-def Laws.outliner_lists_the_scene():
+def Laws.scene_panel_lists_the_scene():
   {==}
 
 def Laws.details_show_transform_and_material():
