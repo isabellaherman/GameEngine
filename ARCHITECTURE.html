@@ -133,6 +133,7 @@
     <tr><td>Shaders</td><td><code>engine/shader/glsl.bend</code>, <code>node.bend</code>, <code>compile.bend</code></td><td>Bend writes the GLSL; main.js only hands it to the driver. Typed nodes (float, vec3: number, color, time, add, mul, sin, mix); the compiler gives each node one named line, in order, and writes a repeated node once. Param nodes become uniforms.</td></tr>
     <tr><td>Materials</td><td><code>engine/material.bend</code></td><td>A graph plus values for its parameters (uniforms). Instances share the graph. A law checks each material is complete. No fields to edit values yet.</td></tr>
     <tr><td>Meshes</td><td><code>engine/mesh.bend</code></td><td>Vertices + indices, CCW triangles. A plane generator. No depth test yet.</td></tr>
+    <tr><td>Transform</td><td><code>engine/transform.bend</code></td><td>Position, rotation (quaternion), scale; the model matrix T·R·S goes to the GPU as u_model. No parent and child yet.</td></tr>
     <tr><td>Water</td><td><code>engine/water.bend</code></td><td>Shape (20 m plane, 40 × 40 cells) + material (a one-node graph). Built in place at the origin: no game objects yet.</td></tr>
     <tr><td>Time</td><td><code>engine/time.bend</code></td><td>The clock: tick, seek, play, pause. reduce_motion freezes it (a law). Not wired to a frame loop yet.</td></tr>
     <tr><td>Build</td><td><code>tools/dev.ts</code>, <code>package.json</code></td><td>Dev server, bundle, manual deploy to GitHub Pages.</td></tr>

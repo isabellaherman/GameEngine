@@ -11,6 +11,7 @@ import Water from "./engine/water.bend";
 import Camera from "./engine/camera.bend";
 import Glsl from "./engine/shader/glsl.bend";
 import Material from "./engine/material.bend";
+import Transform from "./engine/transform.bend";
 import { mountDefaults } from "./editor/defaults/defaults.js";
 
 theme({ mode: "dark", radius: "pill" });   // every button and segmented in the layout is a pill
@@ -76,7 +77,9 @@ const waterMat = Water.material();
 const meshProg = program(Glsl.mesh_vert(), Material.frag(waterMat));
 const mu = {
   vp: gl.getUniformLocation(meshProg, "u_vp"),
+  model: gl.getUniformLocation(meshProg, "u_model"),
 };
+const waterModel = flat(Transform.flat(Water.place()));
 
 // A material's values go to their uniforms; material.bend names each one.
 // Setting a value never compiles anything.
@@ -139,6 +142,7 @@ function draw() {
   // drawing order decides who shows (there is no depth test yet).
   gl.useProgram(meshProg);
   gl.uniformMatrix4fv(mu.vp, false, frame.slice(0, 16));
+  gl.uniformMatrix4fv(mu.model, false, waterModel);
   gl.bindVertexArray(waterVao);
   gl.drawElements(gl.TRIANGLES, waterIdx.length, gl.UNSIGNED_INT, 0);
   gl.useProgram(prog);

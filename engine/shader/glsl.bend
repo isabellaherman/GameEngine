@@ -61,15 +61,18 @@ def line_frag() -> String:
     "  color = vec4(v_col, a);",
     "}"])
 
-# Meshes (engine/mesh.bend): each vertex is only a position, placed on the
-# screen by the same view-projection matrix as the lines.
+# Meshes (engine/mesh.bend): each vertex is only a position, built around
+# the mesh's own origin. The model matrix (u_model, engine/transform.bend)
+# puts it in its place in the World; then the camera's view-projection
+# (u_vp) puts it on the screen.
 def mesh_vert() -> String:
   program([
     "#version 300 es",
     "uniform mat4 u_vp;",
+    "uniform mat4 u_model;",
     "in vec3 a_pos;",
     "void main() {",
-    "  gl_Position = u_vp * vec4(a_pos, 1.0);",
+    "  gl_Position = u_vp * u_model * vec4(a_pos, 1.0);",
     "}"])
 
 # Every pixel of a mesh gets the color a graph gives (engine/shader/node.bend),

@@ -7,10 +7,9 @@
 # water, have their own files.
 #
 # Limits now:
-# - The engine has no scene or game objects yet, so nothing says *where* a
-#   thing is: this water is built already in place, centered at the origin
-#   on y = 0. When game objects exist, the water becomes one, with its own
-#   position.
+# - Its place (a transform) is written here for now, because there is no
+#   scene yet. In step 9 it moves into the scene, beside the water's other
+#   parts.
 # - One flat color and no light, so the 3200 triangles do not show one by
 #   one; they will once the material moves its vertices (waves).
 # - It lies on y = 0 with the grid, and only the drawing order in main.js
@@ -28,9 +27,15 @@ import Base
 import ./vec.bend as V
 import ./color.bend as C
 import ./mesh.bend as M
+import ./transform.bend as Tr
 import ./shader/node.bend as N
 import ./material.bend as Mat
 import ../node_modules/bend-ui/TOKENS.bend as T
+
+# Where it is: at the World's origin, not turned, as built. This moves into
+# the scene (engine/scene.bend, step 9), where every thing has a transform.
+def place() -> Tr.Transform:
+  Tr.identity()
 
 # The shape: a 20 m square cut into 40 × 40 cells, half a meter each.
 # Waves will move each vertex, so it needs many of them.

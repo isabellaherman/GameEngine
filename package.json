@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "bun tools/dev.ts",
     "build": "bend index.html -o dist",
-    "check": "bend PROOF.bend && bend engine/world.bend --check-only && bend engine/camera.bend --check-only && bend engine/gizmo.bend --check-only && bend engine/shader/glsl.bend --check-only && bend engine/time.bend --check-only && bend engine/mesh.bend --check-only && bend engine/quat.bend --check-only && bend tests/quat.bend --check-only && bend engine/shader/node.bend --check-only && bend engine/shader/compile.bend --check-only && bend engine/material.bend --check-only && bend engine/water.bend --check-only && bend editor/defaults/PROOF.bend && bun tools/test.ts",
+    "check": "bend PROOF.bend && bend engine/world.bend --check-only && bend engine/camera.bend --check-only && bend engine/gizmo.bend --check-only && bend engine/shader/glsl.bend --check-only && bend engine/time.bend --check-only && bend engine/mesh.bend --check-only && bend engine/quat.bend --check-only && bend tests/quat.bend --check-only && bend engine/transform.bend --check-only && bend tests/transform.bend --check-only && bend engine/shader/node.bend --check-only && bend engine/shader/compile.bend --check-only && bend engine/material.bend --check-only && bend engine/water.bend --check-only && bend editor/defaults/PROOF.bend && bun tools/test.ts",
     "test": "bun tools/test.ts"
   },
   "dependencies": {
