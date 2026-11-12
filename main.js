@@ -1,14 +1,16 @@
 // The browser side of the engine. It only reads the mouse and draws what
 // Bend returns: the World (engine/world.bend) and the camera
-// (engine/camera.bend) decide every number, and engine/shader/glsl.bend
-// writes the shaders.
+// (engine/camera.bend) decide every number, engine/shader/glsl.bend writes
+// the shaders and engine/material.bend gives the values of their parameters.
 
 import { theme } from "bend-ui";
 import { createKeys } from "bend-ui/keys";
 import Keys from "./KEYS.bend";
 import World from "./engine/world.bend";
+import Water from "./engine/water.bend";
 import Camera from "./engine/camera.bend";
 import Glsl from "./engine/shader/glsl.bend";
+import Material from "./engine/material.bend";
 import { mountDefaults } from "./editor/defaults/defaults.js";
 
 theme({ mode: "dark", radius: "pill" });   // every button and segmented in the layout is a pill
@@ -67,14 +69,28 @@ gl.vertexAttribPointer(pos, 3, gl.FLOAT, false, 24, 0);
 gl.enableVertexAttribArray(col);
 gl.vertexAttribPointer(col, 3, gl.FLOAT, false, 24, 12);
 
-// The water's place: a mesh built once by world.bend (3 floats per vertex,
-// 3 indices per triangle), drawn in one color.
-const meshProg = program(Glsl.mesh_vert(), Glsl.mesh_frag());
+// The water (engine/water.bend): its shape is a mesh built once (3 floats
+// per vertex, 3 indices per triangle); its material is a graph that Bend
+// writes into the shader, plus values for the graph's parameters.
+const waterMat = Water.material();
+const meshProg = program(Glsl.mesh_vert(), Material.frag(waterMat));
 const mu = {
   vp: gl.getUniformLocation(meshProg, "u_vp"),
-  color: gl.getUniformLocation(meshProg, "u_color"),
 };
-const water = World.water();
+
+// A material's values go to their uniforms; material.bend names each one.
+// Setting a value never compiles anything.
+function setValues(p, values) {
+  for (let l = values; l.$ === "Con"; l = l.tail) {
+    const loc = gl.getUniformLocation(p, Material.uniform(l.head));
+    const xs = flat(Material.numbers(l.head));
+    if (xs.length === 1) gl.uniform1f(loc, xs[0]);
+    else if (xs.length === 3) gl.uniform3fv(loc, xs);
+  }
+}
+gl.useProgram(meshProg);
+setValues(meshProg, Material.values(waterMat));
+const water = Water.shape();
 const waterIdx = new Uint32Array(flat(water.indices));
 const waterVao = gl.createVertexArray();
 gl.bindVertexArray(waterVao);
@@ -85,7 +101,6 @@ gl.enableVertexAttribArray(meshPos);
 gl.vertexAttribPointer(meshPos, 3, gl.FLOAT, false, 12, 0);
 gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gl.createBuffer());
 gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, waterIdx, gl.STATIC_DRAW);
-const waterTone = flat(World.water_tone());
 
 const [skyR, skyG, skyB] = flat(World.sky());
 
@@ -120,11 +135,10 @@ function draw() {
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   gl.enable(gl.BLEND);
   gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-  // The water's place first, then the grid over it: both lie on y = 0, so
+  // The water first, then the grid over it: both lie on y = 0, so
   // drawing order decides who shows (there is no depth test yet).
   gl.useProgram(meshProg);
   gl.uniformMatrix4fv(mu.vp, false, frame.slice(0, 16));
-  gl.uniform3fv(mu.color, waterTone);
   gl.bindVertexArray(waterVao);
   gl.drawElements(gl.TRIANGLES, waterIdx.length, gl.UNSIGNED_INT, 0);
   gl.useProgram(prog);

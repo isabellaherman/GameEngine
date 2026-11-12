@@ -29,3 +29,39 @@ def Laws.plane_has_two_triangles_per_cell():
 
 def Laws.plane_indices_name_vertices():
   {==}
+
+def Laws.water_color_is_a_color():
+  {==}
+
+def Laws.color_times_number_is_a_color(r, k):
+  {==}
+
+def Laws.color_plus_number_is_bad(r, k):
+  {==}
+
+def Laws.mix_by_a_color_is_bad(r):
+  {==}
+
+def Laws.mix_by_a_wave_of_time_is_a_color(r):
+  {==}
+
+def Laws.shared_node_is_written_once():
+  {==}
+
+def Laws.output_is_the_last_line():
+  {==}
+
+def Laws.water_material_is_complete():
+  {==}
+
+def Laws.color_needs_three_numbers(x):
+  {==}
+
+def Laws.value_needs_the_parameters_name(x):
+  {==}
+
+def Laws.instance_keeps_the_graph(x):
+  {==}
+
+def Laws.parameter_used_twice_is_one_uniform():
+  {==}

@@ -16,11 +16,15 @@
 #   (engine/shader/node.bend) will catch most mistakes before that.
 # - Bend text is a list of characters, slow to build. Shaders are built
 #   once, at start-up, never per frame.
-# - The uniform and attribute names (u_vp, a_pos…) are written here and
-#   again in main.js. Nothing checks yet that the two match.
-# - No light: meshes are one color.
+# - The engine's own uniform and attribute names (u_vp, a_pos…) are written
+#   here and again in main.js; nothing checks that the two match. Material
+#   parameters do not have this problem: main.js asks material.bend for
+#   their names.
+# - No light: a mesh's color comes straight from its graph.
 
 import Base
+import ./node.bend as N
+import ./compile.bend as G
 
 def program(lines: List<&2, String>) -> String:
   String.join(lines, "\n")
@@ -68,14 +72,20 @@ def mesh_vert() -> String:
     "  gl_Position = u_vp * vec4(a_pos, 1.0);",
     "}"])
 
-# Every pixel of a mesh in one color (u_color). There is no light yet:
-# a material will decide this later.
-def mesh_frag() -> String:
-  program([
-    "#version 300 es",
-    "precision highp float;",
-    "uniform vec3 u_color;",
-    "out vec4 color;",
-    "void main() {",
-    "  color = vec4(u_color, 1.0);",
-    "}"])
+# Every pixel of a mesh gets the color a graph gives (engine/shader/node.bend),
+# compiled into one named line per node (engine/shader/compile.bend), with a
+# uniform declared for each parameter. `base`
+# must be a vec3 (a law checks the water's). u_time is declared for graphs
+# that use Time; the driver drops it when nothing reads it.
+def mesh_frag(+base: N.Node) -> String:
+  +g = G.graph(base)
+  program(List.concat(&2, String, [
+    ["#version 300 es",
+     "precision highp float;",
+     "uniform float u_time;"],
+    G.uniforms(g),
+    ["out vec4 color;",
+     "void main() {"],
+    G.lines(g),
+    [String.concat(["  color = vec4(", G.output(g), ", 1.0);"]),
+     "}"]]))
