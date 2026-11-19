@@ -10,7 +10,7 @@
 # - One flat color and no light, so the 3200 triangles do not show one by
 #   one; they will once the material moves its vertices (waves).
 # - It lies on y = 0 with the grid, and only the drawing order in main.js
-#   keeps the grid on top (no depth test yet).
+#   keeps the grid on top (water is drawn without the depth test).
 # - The material's graph is a single parameter. It grows into the real
 #   water graph (step 11).
 
