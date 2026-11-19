@@ -33,6 +33,7 @@ import ./material.bend as Mat
 import ./transform.bend as Tr
 import ./skin.bend as Skin
 import ./helpers.bend as H
+import ./ik.bend as IK
 
 type Figure is Data:
   Figure{skeleton: Sk.Skeleton, skin: String, params: List<&2, Mat.Value>, idle: C.Clip, walk: C.Clip, helpers: List<&2, H.Prepared>}
@@ -121,10 +122,12 @@ def walk_time(+f: Figure) -> F32:
   param(f, "time")
 
 # The pose the figure takes now: the idle and the walk, sampled and mixed
-# by speed, then the helper bones' rules on top.
+# by speed; the feet kept on the floor (engine/ik.bend); then the helper
+# bones' rules on top. Gregory's pipeline: sample, blend, post-process.
 def pose(+f: Figure) -> P.Pose:
-  +rest = P.rest(skeleton(f))
-  H.apply(helpers(f), B.mix(C.sample(idle(f), rest, param(f, "time")), C.sample(walk(f), rest, walk_time(f)), walk_weight(f)))
+  +s = skeleton(f)
+  +rest = P.rest(s)
+  H.apply(helpers(f), IK.ground(s, B.mix(C.sample(idle(f), rest, param(f, "time")), C.sample(walk(f), rest, walk_time(f)), walk_weight(f))))
 
 # Should the editor draw the bones? (the "bones" parameter)
 def shows_bones(+f: Figure) -> Bool:
