@@ -4,14 +4,15 @@
 // 1. Laws: `bend PROOF.bend` (and the editor's own) must print ALL PROOFS CHECK.
 // 2. Types: every engine, project and editor file compiles (--check-only).
 // 3. Tests: the numerical tests in tests/*.bend (tools/test.ts).
-// 4. Fences: nothing outside refs/ imports from refs/, so third-party
+// 4. Reference characters in refs/, when present (local only).
+// 5. Fences: nothing outside refs/ imports from refs/, so third-party
 //    reference assets can never reach a build.
 //
 // Limits now:
 // - The file list below is written by hand: a new .bend file must be added.
 
 import { $ } from "bun";
-import { readdirSync, readFileSync, statSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 
 const typed = [
@@ -36,6 +37,15 @@ console.log(`${typed.length} files compile`);
 
 step("tests");
 await $`bun tools/test.ts`;
+
+// Reference characters (refs/, gitignored): their own laws, when they are
+// on this machine. Each has a PROOF.bend next to its generated skeleton.
+if (existsSync("refs")) {
+  step("reference characters (local only)");
+  for (const d of readdirSync("refs")) {
+    if (existsSync(`refs/${d}/PROOF.bend`)) { await $`bend refs/${d}/PROOF.bend`.quiet(); console.log(`refs/${d}: laws hold`); }
+  }
+}
 
 step("fences");
 const offenders: string[] = [];

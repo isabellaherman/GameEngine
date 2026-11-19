@@ -1,0 +1,20 @@
+/* The editor's layout, shared by every page that opens the editor (editor/app.js). */
+.viewport { flex: 1; min-height: 0; position: relative; }
+.viewport canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+/* Editor Defaults: the gizmo in the viewport's top-right corner, the info button under it. */
+.editor-defaults { position: absolute; top: var(--space-4); right: var(--space-4); z-index: var(--layer-foot); display: flex; flex-direction: column; align-items: flex-end; gap: var(--space-1); }
+.editor-defaults__gizmo { display: block; touch-action: none; cursor: grab; }
+.editor-defaults__info { padding: var(--space-3); gap: var(--space-2); }
+.editor-defaults__row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); }
+.editor-defaults__readonly { align-self: flex-start; }
+.editor-defaults__readonly > button { pointer-events: none; }   /* it shows the state; ACCESSIBILITY.bend sets it */
+/* Scene and Details panels: stacked on the right of the viewport, as in Unreal. */
+.editor-panels { width: var(--side-width); flex: none; display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-2); min-height: 0; border-left: var(--border-width) solid var(--border); background: var(--bg); }
+.editor-panels__scene { flex: none; max-height: 40%; display: flex; flex-direction: column; min-height: 0; }
+.editor-panels__details { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+.editor-panels__list, .editor-panels__body { overflow: auto; min-height: 0; padding: var(--space-2); display: flex; flex-direction: column; gap: var(--space-1); }
+.editor-panels__item { justify-content: flex-start; width: 100%; }
+.editor-panels__row { border: 0; margin: 0; padding: var(--space-1) var(--space-2); min-width: 0; }
+.editor-panels__fields { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-1); }
+.editor-panels__field { min-width: 0; }
+.editor-panels__field .input { width: 100%; min-width: 0; }
