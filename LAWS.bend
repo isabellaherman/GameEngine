@@ -22,6 +22,7 @@ import ./projects/character/arm.bend as Arm
 import ./engine/figure.bend as Fig
 import ./engine/skin.bend as Skin
 import ./engine/helpers.bend as H
+import ./engine/locomotion.bend as Loco
 
 # ---------- Shortcuts ----------
 
@@ -287,3 +288,11 @@ law missing_helper_rule_is_caught:
 # LAW: a rule on a Deform bone is caught (clips move those, not rules).
 law rule_on_deform_bone_is_caught:
   {H.helpers_cover(Arm.skeleton(), [H.Rule{3, 4, H.Roll{}, 0.5}, H.Rule{5, 2, H.Full{}, 0.5}, H.Rule{2, 1, H.Full{}, 0.5}]) == False{} : Bool}
+
+# ---------- Locomotion ----------
+
+# LAW: with reduce_motion on (Step), no key means no change, in any scene.
+law no_key_no_step:
+  for s: S.Scene
+  for dt: F32
+  {Loco.drive(s, Loco.still(), dt, True{}) == s : S.Scene}

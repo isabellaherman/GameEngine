@@ -20,9 +20,8 @@
 # - The skin is a path, read by the browser; the mesh itself never passes
 #   through Bend (too many numbers). Its laws are checked when it is made
 #   (tools/gltf.ts).
-# - Changing speed changes the walk's playback rate, so the step's phase
-#   jumps when speed is edited by hand. The animator (a phase that
-#   accumulates) fixes this.
+# - One clock for idle and walk: while walking, the idle's breath runs at
+#   the walk's pace too (it barely shows under the walk).
 
 import Base
 import ./skeleton.bend as Sk
@@ -112,10 +111,14 @@ def param(+f: Figure, +want: String) -> F32:
 def walk_weight(+f: Figure) -> F32:
   F32.clamp((param(f, "speed") / F32.max(C.speed(walk(f)), 0.001) : F32), 0.0, 1.0)
 
-# The walk's own clock: it plays faster or slower to match the speed, and
-# never slower than half its rate while it shows.
+# How fast the animation clock runs: at the walk's pace when walking (the
+# feet keep up with the ground), never under half while the walk shows.
+def rate(+f: Figure) -> F32:
+  F32.max(walk_weight(f), 0.5)
+
+# The walk's clock is the figure's time, which advance() moves at rate().
 def walk_time(+f: Figure) -> F32:
-  (param(f, "time") * F32.max(walk_weight(f), 0.5) : F32)
+  param(f, "time")
 
 # The pose the figure takes now: the idle and the walk, sampled and mixed
 # by speed, then the helper bones' rules on top.
@@ -172,4 +175,4 @@ def advance(+f: Figure, +dt: F32, reduce: Bool) -> Figure:
     case True{}:
       f
     case False{}:
-      set_param(f, "time", (param(f, "time") + F32.clamp(dt, 0.0, 0.1) : F32))
+      set_param(f, "time", (param(f, "time") + F32.clamp(dt, 0.0, 0.1) * rate(f) : F32))

@@ -4,6 +4,7 @@ import Base
 import ./LAWS.bend as Laws
 import ./PROJECT.bend as P
 import ./engine/scene.bend as S
+import ./engine/locomotion.bend as Loco
 
 def Laws.engine_keys_never_clash():
   {==}
@@ -178,3 +179,18 @@ def Laws.missing_helper_rule_is_caught():
 
 def Laws.rule_on_deform_bone_is_caught():
   {==}
+
+# With no key pressed, Step leaves every thing as it was: by induction.
+def still_things(xs: List<&2, S.Thing>, dt: F32) -> {xs == Loco.drive_go(xs, Loco.still(), dt, True{}) : List<&2, S.Thing>}:
+  match xs:
+    case Nil{}:
+      {==}
+    case h <> t:
+      %still_things(t, dt) : {h <> t == h <> _ : List<&2, S.Thing>}
+      {==}
+
+def Laws.no_key_no_step(s, dt):
+  match s:
+    case S.Scene{xs}:
+      %still_things(xs, dt) : {S.Scene{_} == S.Scene{xs} : S.Scene}
+      {==}

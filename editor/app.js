@@ -20,6 +20,7 @@ import { mountDefaults } from "./defaults/defaults.js";
 import { mountPanels } from "./panels/panels.js";
 import Panels from "./panels/panels.bend";
 import Defaults from "./defaults/defaults.bend";
+import Loco from "../engine/locomotion.bend";
 
 // Opens the editor on a scene (a Bend value, engine/scene.bend).
 //
@@ -284,7 +285,8 @@ export function startEditor(opening, { skins = {}, camera = null } = {}) {
     const handlers = {};
     for (let l = Keys.keymap(); l.$ === "Con"; l = l.tail) {
       const action = l.head.action;
-      handlers[action] = Keys.is_home(action) ? () => defaults.home() : () => defaults.look(Keys.view_handle(action));
+      handlers[action] = Keys.is_walk(action) ? () => {}
+        : Keys.is_home(action) ? () => defaults.home() : () => defaults.look(Keys.view_handle(action));
     }
     createKeys(Keys.keymap(), handlers);
   }
@@ -346,12 +348,42 @@ export function startEditor(opening, { skins = {}, camera = null } = {}) {
     const dt = last ? (now - last) / 1000 : 0;
     last = now;
     if (Scene.animated(scene) && !Defaults.reduce_motion(still.matches)) {
+      scene = Loco.drive(scene, held(), dt, false);
       scene = Scene.advance(scene, dt, false);
       redraw();
     }
     requestAnimationFrame(tick);
   }
   requestAnimationFrame(tick);
+
+  // Walking (engine/locomotion.bend, keys in KEYS.bend). With motion
+  // allowed, held keys drive the character every frame (tick above). With
+  // reduce_motion on, each press is one step: a key held down does not
+  // repeat.
+  const walkKeys = new Map();
+  for (let l = Keys.keymap(); l.$ === "Con"; l = l.tail) {
+    if (Keys.is_walk(l.head.action)) walkKeys.set(l.head.key, l.head.action);
+  }
+  const down = new Set();
+  function held() {
+    const acts = [...down].map((k) => walkKeys.get(k));
+    const code = (fwd) => acts.reduce((c, a) => { const x = fwd ? Keys.walk_forward(a) : Keys.walk_turn(a); return x === 0 ? c : c === 0 ? x : -1; }, 0);
+    const f = code(true), t = code(false);
+    return Loco.input(f < 0 ? 0 : f, t < 0 ? 0 : t);   // opposite keys cancel
+  }
+  const typing = (e) => /^(INPUT|TEXTAREA|SELECT)$/.test(e.target?.tagName ?? "");
+  addEventListener("keydown", (e) => {
+    const key = e.key.toLowerCase();
+    if (!walkKeys.has(key) || typing(e) || e.metaKey || e.ctrlKey || e.altKey) return;
+    if (Defaults.reduce_motion(still.matches)) {
+      if (e.repeat) return;
+      const a = walkKeys.get(key);
+      scene = Loco.drive(scene, Loco.input(Keys.walk_forward(a), Keys.walk_turn(a)), 0, true);
+      redraw();
+    } else down.add(key);
+  });
+  addEventListener("keyup", (e) => down.delete(e.key.toLowerCase()));
+  addEventListener("blur", () => down.clear());
 
   new ResizeObserver(() => {
     const dpr = devicePixelRatio || 1;

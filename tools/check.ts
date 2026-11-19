@@ -19,10 +19,10 @@ const typed = [
   "engine/vec.bend", "engine/world.bend", "engine/camera.bend", "engine/gizmo.bend",
   "engine/shader/glsl.bend", "engine/time.bend", "engine/mesh.bend", "engine/quat.bend",
   "engine/transform.bend", "engine/shader/node.bend", "engine/shader/compile.bend",
-  "engine/material.bend", "engine/scene.bend", "engine/skeleton.bend", "engine/pose.bend", "engine/clip.bend", "engine/blend.bend", "engine/gait.bend", "engine/skin.bend", "engine/helpers.bend", "engine/figure.bend",
+  "engine/material.bend", "engine/scene.bend", "engine/skeleton.bend", "engine/pose.bend", "engine/clip.bend", "engine/blend.bend", "engine/gait.bend", "engine/skin.bend", "engine/helpers.bend", "engine/figure.bend", "engine/locomotion.bend",
   "projects/water/water.bend", "projects/water/scene.bend", "projects/character/scene.bend", "projects/character/arm.bend",
   "PROJECT.bend", "editor/panels/panels.bend",
-  "tests/quat.bend", "tests/transform.bend", "tests/pose.bend", "tests/clip.bend",
+  "tests/quat.bend", "tests/transform.bend", "tests/pose.bend", "tests/clip.bend", "tests/locomotion.bend",
 ];
 
 function step(title: string) { console.log(`\n== ${title}`); }
