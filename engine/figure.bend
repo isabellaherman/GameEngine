@@ -33,9 +33,10 @@ import ./blend.bend as B
 import ./material.bend as Mat
 import ./transform.bend as Tr
 import ./skin.bend as Skin
+import ./helpers.bend as H
 
 type Figure is Data:
-  Figure{skeleton: Sk.Skeleton, skin: String, params: List<&2, Mat.Value>, idle: C.Clip, walk: C.Clip}
+  Figure{skeleton: Sk.Skeleton, skin: String, params: List<&2, Mat.Value>, idle: C.Clip, walk: C.Clip, helpers: List<&2, H.Prepared>}
 
 def pick_n(c: Bool, +a: F32, +b: F32) -> F32:
   match c:
@@ -44,37 +45,42 @@ def pick_n(c: Bool, +a: F32, +b: F32) -> F32:
     case False{}:
       b
 
-# A figure for a skeleton, standing at time 0, with the code-made clips.
-# Its bones show when it has no skin.
-def make(+s: Sk.Skeleton, +skin: String) -> Figure:
-  Figure{s, skin, [Mat.Value{"time", [0.0]}, Mat.Value{"speed", [0.0]}, Mat.Value{"bones", [pick_n(String.eq(skin, ""), 1.0, 0.0)]}], G.idle(s), G.walk(s)}
+# A figure for a skeleton, standing at time 0, with the code-made clips
+# and the rules of its helper bones (engine/helpers.bend). Its bones show
+# when it has no skin.
+def make(+s: Sk.Skeleton, +skin: String, rules: List<&2, H.Rule>) -> Figure:
+  Figure{s, skin, [Mat.Value{"time", [0.0]}, Mat.Value{"speed", [0.0]}, Mat.Value{"bones", [pick_n(String.eq(skin, ""), 1.0, 0.0)]}], G.idle(s), G.walk(s), H.prepare(s, rules)}
 
 def empty() -> Figure:
-  make(Sk.Skeleton{Nil{}}, "")
+  make(Sk.Skeleton{Nil{}}, "", Nil{})
 
 def skeleton(f: Figure) -> Sk.Skeleton:
-  Figure{s, _, _, _, _} = f
+  Figure{s, _, _, _, _, _} = f
   s
 
 def skin(f: Figure) -> String:
-  Figure{_, k, _, _, _} = f
+  Figure{_, k, _, _, _, _} = f
   k
 
 def params(f: Figure) -> List<&2, Mat.Value>:
-  Figure{_, _, ps, _, _} = f
+  Figure{_, _, ps, _, _, _} = f
   ps
 
 def idle(f: Figure) -> C.Clip:
-  Figure{_, _, _, i, _} = f
+  Figure{_, _, _, i, _, _} = f
   i
 
 def walk(f: Figure) -> C.Clip:
-  Figure{_, _, _, _, w} = f
+  Figure{_, _, _, _, w, _} = f
   w
 
+def helpers(f: Figure) -> List<&2, H.Prepared>:
+  Figure{_, _, _, _, _, h} = f
+  h
+
 def with_params(f: Figure, ps: List<&2, Mat.Value>) -> Figure:
-  Figure{s, k, _, i, w} = f
-  Figure{s, k, ps, i, w}
+  Figure{s, k, _, i, w, h} = f
+  Figure{s, k, ps, i, w, h}
 
 def pick_f(c: Bool, +a: F32, +b: F32) -> F32:
   match c:
@@ -112,10 +118,10 @@ def walk_time(+f: Figure) -> F32:
   (param(f, "time") * F32.max(walk_weight(f), 0.5) : F32)
 
 # The pose the figure takes now: the idle and the walk, sampled and mixed
-# by speed.
+# by speed, then the helper bones' rules on top.
 def pose(+f: Figure) -> P.Pose:
   +rest = P.rest(skeleton(f))
-  B.mix(C.sample(idle(f), rest, param(f, "time")), C.sample(walk(f), rest, walk_time(f)), walk_weight(f))
+  H.apply(helpers(f), B.mix(C.sample(idle(f), rest, param(f, "time")), C.sample(walk(f), rest, walk_time(f)), walk_weight(f)))
 
 # Should the editor draw the bones? (the "bones" parameter)
 def shows_bones(+f: Figure) -> Bool:

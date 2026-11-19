@@ -11,6 +11,7 @@ import ../engine/clip.bend as C
 import ../engine/blend.bend as B
 import ../engine/gait.bend as G
 import ../projects/character/arm.bend as Arm
+import ../engine/helpers.bend as H
 
 type Check is Data:
   Check{name: String, ok: Bool}
@@ -63,5 +64,9 @@ def checks() -> List<&2, Check>:
      U32.is_eq(track_count(G.walk(Arm.skeleton())), 2)},
    Check{"the walk comes back to where it started after one cycle",
      close3(hand(C.sample(G.walk(Arm.skeleton()), rest(), 0.0)), hand(C.sample(G.walk(Arm.skeleton()), rest(), 0.9999)))},
+   Check{"the elbow support turns half as much as the elbow bends",
+     closeq(Tr.rotation(P.local_at(H.apply(H.prepare(Arm.skeleton(), Arm.rules()), C.sample(bend(), rest(), 0.9999)), 5)), eighth())},
+   Check{"at rest, every helper stays at rest",
+     closeq(Tr.rotation(P.local_at(H.apply(H.prepare(Arm.skeleton(), Arm.rules()), rest()), 3)), Q.identity())},
    Check{"in the idle the arm hangs: the hand is below the shoulder",
      F32.is_lt(V.y(hand(C.sample(G.idle(Arm.skeleton()), rest(), 0.0))), 1.2)}]

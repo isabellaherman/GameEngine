@@ -18,6 +18,7 @@ import ../../engine/vec.bend as V
 import ../../engine/quat.bend as Q
 import ../../engine/transform.bend as Tr
 import ../../engine/skeleton.bend as Sk
+import ../../engine/helpers.bend as H
 
 def along(+y: F32) -> Tr.Transform:
   Tr.at(V.V3{0.0, y, 0.0})
@@ -31,3 +32,9 @@ def skeleton() -> Sk.Skeleton:
     Sk.Bone{"forearm twist", "", Sk.Twist{}, 2, along(0.12), 0.08},
     Sk.Bone{"hand", "hand.L", Sk.Deform{}, 2, along(0.25), 0.1},
     Sk.Bone{"elbow fix", "", Sk.Support{}, 1, along(0.3), 0.06}]}
+
+# The helpers' rules: the forearm twist takes half the hand's roll, and the
+# elbow support turns half as much as the elbow bends.
+def rules() -> List<&2, H.Rule>:
+  [H.Rule{3, 4, H.Roll{}, 0.5},
+   H.Rule{5, 2, H.Full{}, 0.5}]

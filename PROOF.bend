@@ -169,3 +169,12 @@ def Laws.joint_past_the_end_fails():
 
 def Laws.empty_slots_are_ignored():
   {==}
+
+def Laws.arm_helpers_are_covered():
+  {==}
+
+def Laws.missing_helper_rule_is_caught():
+  {==}
+
+def Laws.rule_on_deform_bone_is_caught():
+  {==}

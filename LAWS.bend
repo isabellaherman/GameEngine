@@ -21,6 +21,7 @@ import ./engine/skeleton.bend as Sk
 import ./projects/character/arm.bend as Arm
 import ./engine/figure.bend as Fig
 import ./engine/skin.bend as Skin
+import ./engine/helpers.bend as H
 
 # ---------- Shortcuts ----------
 
@@ -272,3 +273,17 @@ law joint_past_the_end_fails:
 # LAW: empty slots (weight 0) may point anywhere.
 law empty_slots_are_ignored:
   {Skin.vertex_ok(2, 9, 9, 9, 65535, 0, 0, 0, 6) == True{} : Bool}
+
+# ---------- Helper bones ----------
+
+# LAW: every Twist and Support bone of the test arm has exactly one rule.
+law arm_helpers_are_covered:
+  {H.helpers_cover(Arm.skeleton(), Arm.rules()) == True{} : Bool}
+
+# LAW: a helper without a rule is caught.
+law missing_helper_rule_is_caught:
+  {H.helpers_cover(Arm.skeleton(), [H.Rule{3, 4, H.Roll{}, 0.5}]) == False{} : Bool}
+
+# LAW: a rule on a Deform bone is caught (clips move those, not rules).
+law rule_on_deform_bone_is_caught:
+  {H.helpers_cover(Arm.skeleton(), [H.Rule{3, 4, H.Roll{}, 0.5}, H.Rule{5, 2, H.Full{}, 0.5}, H.Rule{2, 1, H.Full{}, 0.5}]) == False{} : Bool}
