@@ -14,6 +14,7 @@ import Camera from "./engine/camera.bend";
 import Glsl from "./engine/shader/glsl.bend";
 import Material from "./engine/material.bend";
 import Transform from "./engine/transform.bend";
+import Figure from "./engine/figure.bend";
 import { mountDefaults } from "./editor/defaults/defaults.js";
 import { mountPanels } from "./editor/panels/panels.js";
 import Panels from "./editor/panels/panels.bend";
@@ -135,6 +136,26 @@ function edit(i, e, value) {
   redraw();
 }
 
+// Characters (things with a figure): their bones as lines, in the same
+// format as the grid, asked from Bend again every frame because a pose
+// changes over time.
+const boneVao = gl.createVertexArray();
+const boneBuf = gl.createBuffer();
+gl.bindVertexArray(boneVao);
+gl.bindBuffer(gl.ARRAY_BUFFER, boneBuf);
+gl.enableVertexAttribArray(pos);
+gl.vertexAttribPointer(pos, 3, gl.FLOAT, false, 24, 0);
+gl.enableVertexAttribArray(col);
+gl.vertexAttribPointer(col, 3, gl.FLOAT, false, 24, 12);
+
+function boneLines() {
+  const out = [];
+  for (const t of flat(Scene.things(scene))) {
+    if (Scene.is_rigged(t)) out.push(...flat(Figure.lines(Scene.figure(Scene.look(t)), Scene.place(t))));
+  }
+  return new Float32Array(out);
+}
+
 const [skyR, skyG, skyB] = flat(World.sky());
 
 // Frame
@@ -191,6 +212,14 @@ function draw() {
   gl.uniform2fv(u.fade, flat(World.fade(cam)));
   gl.bindVertexArray(vao);
   gl.drawArrays(gl.LINES, 0, lines.length / 6);
+  // Bones last, over everything, so they show through a skin (x-ray).
+  const bones = boneLines();
+  if (bones.length) {
+    gl.bindVertexArray(boneVao);
+    gl.bindBuffer(gl.ARRAY_BUFFER, boneBuf);
+    gl.bufferData(gl.ARRAY_BUFFER, bones, gl.DYNAMIC_DRAW);
+    gl.drawArrays(gl.LINES, 0, bones.length / 6);
+  }
   defaults.draw();
 }
 

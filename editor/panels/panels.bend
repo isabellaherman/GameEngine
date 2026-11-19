@@ -30,6 +30,7 @@ import ../../engine/quat.bend as Q
 import ../../engine/transform.bend as Tr
 import ../../engine/material.bend as Mat
 import ../../engine/scene.bend as S
+import ../../engine/figure.bend as Fig
 
 # What a field edits: one axis of the position, rotation or scale, or
 # number k of the material value with this name.
@@ -127,12 +128,25 @@ def value_rows(vs: List<&2, Mat.Value>) -> List<&2, Row>:
     case h <> t:
       value_row(h) <> value_rows(t)
 
+def pick_sections(c: Bool, a: List<&2, Section>, b: List<&2, Section>) -> List<&2, Section>:
+  match c:
+    case True{}:
+      a
+    case False{}:
+      b
+
+# A character's animation parameters, when it has any.
+def animation_section(+ps: List<&2, Mat.Value>) -> List<&2, Section>:
+  pick_sections(List.is_empty(&2, Mat.Value, ps), Nil{}, [Section{"Animation", value_rows(ps)}])
+
 def look_sections(l: S.Look) -> List<&2, Section>:
   match l:
     case S.Shown{_, m}:
       [Section{"Material", value_rows(Mat.values(m))}]
     case S.Hidden{}:
       Nil{}
+    case S.Rigged{f}:
+      animation_section(Fig.params(f))
 
 # Every section of the Details panel for thing i.
 def sections(s: S.Scene, +i: U32) -> List<&2, Section>:
@@ -202,6 +216,8 @@ def set_look(l: S.Look, +name: String, +k: U32, +x: F32) -> S.Look:
       S.Shown{shape, Mat.instance(m, set_values(Mat.values(m), name, k, x))}
     case S.Hidden{}:
       S.Hidden{}
+    case S.Rigged{+f}:
+      S.Rigged{Fig.with_params(f, set_values(Fig.params(f), name, k, x))}
 
 def edit_thing(t: S.Thing, e: Edit, +x: F32) -> S.Thing:
   S.Thing{n, +p, l} = t

@@ -10,8 +10,9 @@
 # A thing has:
 # - a name, shown in the editor (the Scene panel);
 # - a place (engine/transform.bend): where it is, how it is turned, its size;
-# - a look: Shown with a shape (a mesh) and a material, or Hidden for a
-#   thing that is not drawn.
+# - a look: Shown with a shape (a mesh) and a material, Rigged for a
+#   character (a figure: skeleton, skin, animation parameters), or Hidden
+#   for a thing that is not drawn.
 #
 # This file is engine code: the types every scene uses. A real scene, with
 # its things, is content and lives in a project (projects/*/scene.bend).
@@ -35,10 +36,13 @@ import ./mesh.bend as M
 import ./material.bend as Mat
 import ./transform.bend as Tr
 import ./shader/node.bend as N
+import ./figure.bend as Fig
+import ./skeleton.bend as Sk
 
 type Look is Data:
   Hidden{}
   Shown{shape: M.Mesh, material: Mat.Material}
+  Rigged{figure: Fig.Figure}
 
 type Thing is Data:
   Thing{name: String, place: Tr.Transform, look: Look}
@@ -70,20 +74,39 @@ def is_shown(t: Thing) -> Bool:
       True{}
     case Hidden{}:
       False{}
+    case Rigged{_}:
+      False{}
+
+# Is the thing a character? (main.js draws those every frame.)
+def is_rigged(t: Thing) -> Bool:
+  Thing{_, _, l} = t
+  match l:
+    case Rigged{_}:
+      True{}
+    case _:
+      False{}
 
 def shape(l: Look) -> M.Mesh:
   match l:
     case Shown{s, _}:
       s
-    case Hidden{}:
+    case _:
       M.Mesh{Nil{}, Nil{}}
 
 def material(l: Look) -> Mat.Material:
   match l:
     case Shown{_, m}:
       m
-    case Hidden{}:
+    case _:
       Mat.Material{N.Rgb{0.0, 0.0, 0.0}, Nil{}}
+
+# A character's figure (a thing that is not one gets an empty figure).
+def figure(l: Look) -> Fig.Figure:
+  match l:
+    case Rigged{f}:
+      f
+    case _:
+      Fig.Figure{Sk.Skeleton{Nil{}}, "", Nil{}}
 
 def pick_thing(c: Bool, a: Thing, b: Thing) -> Thing:
   match c:
@@ -133,7 +156,7 @@ def complete_look(l: Look) -> Bool:
   match l:
     case Shown{_, m}:
       Mat.complete(m)
-    case Hidden{}:
+    case _:
       True{}
 
 def all_complete(xs: List<&2, Thing>) -> Bool:
