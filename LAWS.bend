@@ -19,6 +19,7 @@ import ./engine/vec.bend as V
 import ./PROJECT.bend as P
 import ./engine/skeleton.bend as Sk
 import ./projects/character/arm.bend as Arm
+import ./engine/figure.bend as Fig
 
 # ---------- Shortcuts ----------
 
@@ -228,3 +229,17 @@ law support_under_twist_is_valid:
      Sk.Bone{"arm", "", Sk.Deform{}, 0, t, 0.0},
      Sk.Bone{"twist", "", Sk.Twist{}, 1, t, 0.0},
      Sk.Bone{"fix", "", Sk.Support{}, 2, t, 0.0}]}) == True{} : Bool}
+
+# ---------- Animation ----------
+
+# LAW: with reduce_motion on, a character's animation never moves by itself.
+law reduce_motion_freezes_figures:
+  for f: Fig.Figure
+  for dt: F32
+  {Fig.advance(f, dt, True{}) == f : Fig.Figure}
+
+# LAW: the same for a whole scene.
+law reduce_motion_freezes_scenes:
+  for s: S.Scene
+  for dt: F32
+  {S.advance(s, dt, True{}) == s : S.Scene}

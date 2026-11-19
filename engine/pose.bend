@@ -28,6 +28,13 @@ type Pose is Data:
   Pose{locals: List<&2, Tr.Transform>}
 
 # Choosing between two values (a match must look at a parameter).
+def pick_q(c: Bool, a: Q.Q, b: Q.Q) -> Q.Q:
+  match c:
+    case True{}:
+      a
+    case False{}:
+      b
+
 def pick_tr(c: Bool, a: Tr.Transform, b: Tr.Transform) -> Tr.Transform:
   match c:
     case True{}:
@@ -185,3 +192,29 @@ def lines_go(bs: List<&2, Sk.Bone>, ms: List<&2, V.M4>) -> List<&2, F32>:
 # The skeleton in a pose, as lines in the World, placed by `place`.
 def lines(+s: Sk.Skeleton, p: Pose, +place: Tr.Transform) -> List<&2, F32>:
   lines_go(Sk.bones(s), world(s, p, place))
+
+# Rest rotations
+# ==============
+
+# Bone i's rotation at rest, measured from the character's origin (its
+# parents' rotations and its own, composed). `fuel` bounds the climb: no
+# skeleton is deeper than 64 bones.
+def rest_rotation_go(fuel: Nat, +s: Sk.Skeleton, +i: U32) -> Q.Q:
+  match fuel:
+    case 0n:
+      Q.identity()
+    case 1n+f:
+      +own = Tr.rotation(Sk.rest(Sk.at(s, i)))
+      pick_q(U32.is_eq(i, 0), own, Q.mul(rest_rotation_go(f, s, Sk.parent_of(s, i)), own))
+
+def rest_rotation(+s: Sk.Skeleton, +i: U32) -> Q.Q:
+  rest_rotation_go(64n, s, i)
+
+# A turn given in the character's own axes (X to its left, Y up, Z ahead),
+# as the local rotation bone i takes: its rest rotation, then the turn,
+# measured from where the bone points at rest. This is how code (and the
+# walk in engine/gait.bend) says "swing the thigh forward" without knowing
+# how each bone's own axes are set.
+def turned(+s: Sk.Skeleton, +i: U32, +turn: Q.Q) -> Q.Q:
+  +g = rest_rotation(s, i)
+  Q.normalize(Q.mul(Tr.rotation(Sk.rest(Sk.at(s, i))), Q.mul(Q.conj(g), Q.mul(turn, g))))

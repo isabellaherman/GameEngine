@@ -19,6 +19,7 @@ import Figure from "../engine/figure.bend";
 import { mountDefaults } from "./defaults/defaults.js";
 import { mountPanels } from "./panels/panels.js";
 import Panels from "./panels/panels.bend";
+import Defaults from "./defaults/defaults.bend";
 
 // Opens the editor on a scene (a Bend value, engine/scene.bend).
 export function startEditor(opening) {
@@ -227,6 +228,23 @@ export function startEditor(opening) {
   }
 
   const redraw = () => { if (!queued) { queued = true; requestAnimationFrame(draw); } };
+
+  // The clock: characters' animations move on by themselves only when
+  // motion is not reduced (ACCESSIBILITY.bend, through Editor Defaults).
+  // With reduce_motion on, a character moves only when its time is typed
+  // in the Details panel.
+  const still = matchMedia("(prefers-reduced-motion: reduce)");
+  let last = 0;
+  function tick(now) {
+    const dt = last ? (now - last) / 1000 : 0;
+    last = now;
+    if (Scene.animated(scene) && !Defaults.reduce_motion(still.matches)) {
+      scene = Scene.advance(scene, dt, false);
+      redraw();
+    }
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
 
   new ResizeObserver(() => {
     const dpr = devicePixelRatio || 1;

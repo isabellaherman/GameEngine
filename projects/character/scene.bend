@@ -18,4 +18,4 @@ import ./arm.bend as Arm
 
 def start() -> S.Scene:
   S.Scene{[
-    S.Thing{"Arm", Tr.identity(), S.Rigged{Fig.Figure{Arm.skeleton(), "", Nil{}}}}]}
+    S.Thing{"Arm", Tr.identity(), S.Rigged{Fig.make(Arm.skeleton(), "")}}]}

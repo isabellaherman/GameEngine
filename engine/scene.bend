@@ -106,7 +106,7 @@ def figure(l: Look) -> Fig.Figure:
     case Rigged{f}:
       f
     case _:
-      Fig.Figure{Sk.Skeleton{Nil{}}, "", Nil{}}
+      Fig.empty()
 
 def pick_thing(c: Bool, a: Thing, b: Thing) -> Thing:
   match c:
@@ -169,3 +169,39 @@ def all_complete(xs: List<&2, Thing>) -> Bool:
 def complete(s: Scene) -> Bool:
   Scene{xs} = s
   all_complete(xs)
+
+# Time
+# ====
+
+def advance_look(l: Look, +dt: F32, +reduce: Bool) -> Look:
+  match l:
+    case Rigged{f}:
+      Rigged{Fig.advance(f, dt, reduce)}
+    case _:
+      l
+
+def advance_go(xs: List<&2, Thing>, +dt: F32, +reduce: Bool) -> List<&2, Thing>:
+  match xs:
+    case Nil{}:
+      Nil{}
+    case h <> t:
+      Thing{n, p, l} = h
+      Thing{n, p, advance_look(l, dt, reduce)} <> advance_go(t, dt, reduce)
+
+# The scene dt seconds later: every character's animation moves on (unless
+# reduce_motion is on). Nothing else in a scene moves by itself yet.
+def advance(s: Scene, +dt: F32, +reduce: Bool) -> Scene:
+  Scene{xs} = s
+  Scene{advance_go(xs, dt, reduce)}
+
+# Is anything in the scene animated? (main.js runs the clock only then.)
+def any_rigged(xs: List<&2, Thing>) -> Bool:
+  match xs:
+    case Nil{}:
+      False{}
+    case h <> t:
+      (is_rigged(h) || any_rigged(t))
+
+def animated(s: Scene) -> Bool:
+  Scene{xs} = s
+  any_rigged(xs)

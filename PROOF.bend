@@ -3,6 +3,7 @@
 import Base
 import ./LAWS.bend as Laws
 import ./PROJECT.bend as P
+import ./engine/scene.bend as S
 
 def Laws.engine_keys_never_clash():
   {==}
@@ -121,3 +122,32 @@ def Laws.deform_under_twist_is_invalid(t):
 
 def Laws.support_under_twist_is_valid(t):
   {==}
+
+def Laws.reduce_motion_freezes_figures(f, dt):
+  {==}
+
+# A scene's things, advanced with reduce_motion on, are the same things:
+# by induction on the list, looking at each thing's look.
+def frozen_things(xs: List<&2, S.Thing>, dt: F32) -> {xs == S.advance_go(xs, dt, True{}) : List<&2, S.Thing>}:
+  match xs:
+    case Nil{}:
+      {==}
+    case h <> t:
+      match h:
+        case S.Thing{n, p, l}:
+          match l:
+            case S.Hidden{}:
+              %frozen_things(t, dt) : {S.Thing{n, p, S.Hidden{}} <> t == S.Thing{n, p, S.Hidden{}} <> _ : List<&2, S.Thing>}
+              {==}
+            case S.Shown{sh, m}:
+              %frozen_things(t, dt) : {S.Thing{n, p, S.Shown{sh, m}} <> t == S.Thing{n, p, S.Shown{sh, m}} <> _ : List<&2, S.Thing>}
+              {==}
+            case S.Rigged{f}:
+              %frozen_things(t, dt) : {S.Thing{n, p, S.Rigged{f}} <> t == S.Thing{n, p, S.Rigged{f}} <> _ : List<&2, S.Thing>}
+              {==}
+
+def Laws.reduce_motion_freezes_scenes(s, dt):
+  match s:
+    case S.Scene{xs}:
+      %frozen_things(xs, dt) : {S.Scene{_} == S.Scene{xs} : S.Scene}
+      {==}
