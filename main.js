@@ -4,4 +4,4 @@
 import Project from "./PROJECT.bend";
 import { startEditor } from "./editor/app.js";
 
-startEditor(Project.opening());
+startEditor(Project.opening(), { camera: Project.opening_camera() });

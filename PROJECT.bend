@@ -19,6 +19,7 @@
 
 import Base
 import ./engine/scene.bend as S
+import ./engine/camera.bend as Cam
 import ./projects/water/scene.bend as WaterScene
 import ./projects/character/scene.bend as CharacterScene
 
@@ -46,3 +47,14 @@ def start(p: Project) -> S.Scene:
 # The scene the editor opens with.
 def opening() -> S.Scene:
   start(open())
+
+# Where the editor's camera starts: the whole Water, or a person up close.
+def camera(p: Project) -> Cam.Cam:
+  match p:
+    case Water{}:
+      Cam.start()
+    case Character{}:
+      Cam.close_up()
+
+def opening_camera() -> Cam.Cam:
+  camera(open())

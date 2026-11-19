@@ -26,6 +26,11 @@ def start() -> Cam:
   Cam{V.V3{0.0, 0.0, 0.0}, 0.7853982, 0.4636476, 14.0}
 
 # The point the camera looks at.
+# A person standing at the World's origin, framed from head to feet: the
+# camera looks at hip height from 3.4 m away, a little from above.
+def close_up() -> Cam:
+  Cam{V.V3{0.0, 0.85, 0.0}, 0.7853982, 0.2, 3.4}
+
 def target(cam: Cam) -> V.V3:
   Cam{t, _, _, _} = cam
   t

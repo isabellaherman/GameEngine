@@ -20,6 +20,7 @@ import ./PROJECT.bend as P
 import ./engine/skeleton.bend as Sk
 import ./projects/character/arm.bend as Arm
 import ./engine/figure.bend as Fig
+import ./engine/skin.bend as Skin
 
 # ---------- Shortcuts ----------
 
@@ -243,3 +244,31 @@ law reduce_motion_freezes_scenes:
   for s: S.Scene
   for dt: F32
   {S.advance(s, dt, True{}) == s : S.Scene}
+
+# ---------- Skin weights ----------
+# The weight rules of engine/skin.bend, on single vertices (the reference
+# rig's 4074 vertices are checked by refs/sora/LAWS.bend when present).
+
+# LAW: weights that sum to 65535 over distinct bones are fine.
+law weights_that_sum_to_the_whole_hold:
+  {Skin.vertex_ok(1, 2, 0, 0, 40000, 25535, 0, 0, 6) == True{} : Bool}
+
+# LAW: weights that miss the whole by 1 do not.
+law weights_one_short_fail:
+  {Skin.vertex_ok(1, 2, 0, 0, 40000, 25534, 0, 0, 6) == False{} : Bool}
+
+# LAW: a vertex with no weight would fall to the origin, so it fails.
+law vertex_without_weight_fails:
+  {Skin.vertex_ok(0, 0, 0, 0, 0, 0, 0, 0, 6) == False{} : Bool}
+
+# LAW: the same bone twice in a vertex fails.
+law same_bone_twice_fails:
+  {Skin.vertex_ok(3, 3, 0, 0, 30000, 35535, 0, 0, 6) == False{} : Bool}
+
+# LAW: a weighted joint past the last bone fails.
+law joint_past_the_end_fails:
+  {Skin.vertex_ok(6, 0, 0, 0, 65535, 0, 0, 0, 6) == False{} : Bool}
+
+# LAW: empty slots (weight 0) may point anywhere.
+law empty_slots_are_ignored:
+  {Skin.vertex_ok(2, 9, 9, 9, 65535, 0, 0, 0, 6) == True{} : Bool}

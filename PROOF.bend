@@ -151,3 +151,21 @@ def Laws.reduce_motion_freezes_scenes(s, dt):
     case S.Scene{xs}:
       %frozen_things(xs, dt) : {S.Scene{_} == S.Scene{xs} : S.Scene}
       {==}
+
+def Laws.weights_that_sum_to_the_whole_hold():
+  {==}
+
+def Laws.weights_one_short_fail():
+  {==}
+
+def Laws.vertex_without_weight_fails():
+  {==}
+
+def Laws.same_bone_twice_fails():
+  {==}
+
+def Laws.joint_past_the_end_fails():
+  {==}
+
+def Laws.empty_slots_are_ignored():
+  {==}

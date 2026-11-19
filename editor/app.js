@@ -22,7 +22,12 @@ import Panels from "./panels/panels.bend";
 import Defaults from "./defaults/defaults.bend";
 
 // Opens the editor on a scene (a Bend value, engine/scene.bend).
-export function startEditor(opening) {
+//
+// `camera` is where the editor's camera starts (engine/camera.bend; its
+// start() when none). `skins` gives, for each figure's skin name, the files to draw it with:
+//   { [name]: { info: <skin.json>, bin: <url of skin.bin>, textures: [url per part] } }
+// written by tools/gltf.ts. A figure whose skin has no entry is drawn as bones.
+export function startEditor(opening, { skins = {}, camera = null } = {}) {
   theme({ mode: "dark", radius: "pill" });   // every button and segmented in the layout is a pill
 
   // A Bend list arrives as cons cells; the GPU wants a flat array.
@@ -155,9 +160,102 @@ export function startEditor(opening) {
   function boneLines() {
     const out = [];
     for (const t of flat(Scene.things(scene))) {
-      if (Scene.is_rigged(t)) out.push(...flat(Figure.lines(Scene.figure(Scene.look(t)), Scene.place(t))));
+      if (!Scene.is_rigged(t)) continue;
+      const fig = Scene.figure(Scene.look(t));
+      if (Figure.shows_bones(fig)) out.push(...flat(Figure.lines(fig, Scene.place(t))));
     }
     return new Float32Array(out);
+  }
+
+  // Skinned characters
+  // ==================
+  // The mesh (positions, normals, UVs, 4 joints and 4 weights per vertex)
+  // goes to the GPU once; every frame Bend gives the skinning matrices
+  // (Figure.palette), which go into a float texture the vertex shader reads.
+  const skinProg = program(Glsl.skinned_vert(), Glsl.skinned_frag());
+  const su = {
+    vp: gl.getUniformLocation(skinProg, "u_vp"),
+    bones: gl.getUniformLocation(skinProg, "u_bones"),
+    tex: gl.getUniformLocation(skinProg, "u_tex"),
+    textured: gl.getUniformLocation(skinProg, "u_textured"),
+    tint: gl.getUniformLocation(skinProg, "u_tint"),
+    sun: gl.getUniformLocation(skinProg, "u_sun"),
+    eyeDir: gl.getUniformLocation(skinProg, "u_eye_dir"),
+  };
+  const loaded = new Map();   // skin name → GPU objects, once its files arrive
+
+  function image(url) {
+    return new Promise((ok) => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => ok(null); i.src = url; });
+  }
+
+  async function loadSkin(name) {
+    const entry = skins[name];
+    if (!entry || loaded.has(name)) return;
+    loaded.set(name, null);
+    const info = entry.info;
+    const bytes = await (await fetch(entry.bin)).arrayBuffer();
+    const vao = gl.createVertexArray();
+    gl.bindVertexArray(vao);
+    gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+    gl.bufferData(gl.ARRAY_BUFFER, new Uint8Array(bytes, 0, info.indexOffset), gl.STATIC_DRAW);
+    const L = info.layout, S = info.stride;
+    const at = (n) => gl.getAttribLocation(skinProg, n);
+    gl.enableVertexAttribArray(at("a_pos")); gl.vertexAttribPointer(at("a_pos"), 3, gl.FLOAT, false, S, L.position);
+    gl.enableVertexAttribArray(at("a_normal")); gl.vertexAttribPointer(at("a_normal"), 3, gl.FLOAT, false, S, L.normal);
+    gl.enableVertexAttribArray(at("a_uv")); gl.vertexAttribPointer(at("a_uv"), 2, gl.FLOAT, false, S, L.uv);
+    gl.enableVertexAttribArray(at("a_joints")); gl.vertexAttribIPointer(at("a_joints"), 4, gl.UNSIGNED_SHORT, S, L.joints);
+    gl.enableVertexAttribArray(at("a_weights")); gl.vertexAttribPointer(at("a_weights"), 4, gl.UNSIGNED_SHORT, true, S, L.weights);
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gl.createBuffer());
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint32Array(bytes, info.indexOffset, info.indices), gl.STATIC_DRAW);
+    const boneTex = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, boneTex);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, 4, info.bones, 0, gl.RGBA, gl.FLOAT, null);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    const textures = await Promise.all(info.parts.map(async (_, k) => {
+      const img = entry.textures?.[k] ? await image(entry.textures[k]) : null;
+      if (!img) return null;
+      const t = gl.createTexture();
+      gl.bindTexture(gl.TEXTURE_2D, t);
+      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
+      gl.generateMipmap(gl.TEXTURE_2D);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+      return t;
+    }));
+    loaded.set(name, { vao, boneTex, textures, info });
+    redraw();
+  }
+
+  function drawSkins(frame) {
+    for (const t of flat(Scene.things(scene))) {
+      if (!Scene.is_rigged(t)) continue;
+      const fig = Scene.figure(Scene.look(t));
+      const g = loaded.get(Figure.skin(fig));
+      if (!g) continue;
+      const palette = new Float32Array(flat(Figure.palette(fig, Scene.place(t))));
+      gl.useProgram(skinProg);
+      gl.activeTexture(gl.TEXTURE1);
+      gl.bindTexture(gl.TEXTURE_2D, g.boneTex);
+      gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 4, g.info.bones, gl.RGBA, gl.FLOAT, palette);
+      gl.uniform1i(su.bones, 1);
+      gl.uniformMatrix4fv(su.vp, false, frame.slice(0, 16));
+      gl.uniform3fv(su.sun, flat(Glsl.sun()));
+      gl.uniform3fv(su.eyeDir, frame.slice(16, 19).map((x) => -x));
+      gl.uniform3fv(su.tint, [0.8, 0.78, 0.74]);
+      gl.bindVertexArray(g.vao);
+      g.info.parts.forEach((part, k) => {
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, g.textures[k]);
+        gl.uniform1i(su.tex, 0);
+        gl.uniform1f(su.textured, g.textures[k] ? 1 : 0);
+        gl.drawElements(gl.TRIANGLES, part.count, gl.UNSIGNED_INT, part.first * 4);
+      });
+    }
+  }
+
+  for (const t of flat(Scene.things(opening))) {
+    if (Scene.is_rigged(t)) loadSkin(Figure.skin(Scene.figure(Scene.look(t))));
   }
 
   const [skyR, skyG, skyB] = flat(World.sky());
@@ -165,7 +263,7 @@ export function startEditor(opening) {
   // Frame
   // =====
 
-  let cam = Camera.start();
+  let cam = camera ?? Camera.start();
   let queued = false;
 
   const defaults = mountDefaults(document.getElementById("editor-defaults"), {
@@ -203,6 +301,9 @@ export function startEditor(opening) {
     // The scene's things first, in order, then the grid over them: the water
     // lies on y = 0 with the grid, so drawing order decides who shows (there
     // is no depth test yet).
+    gl.enable(gl.DEPTH_TEST);
+    drawSkins(frame);
+    gl.disable(gl.DEPTH_TEST);
     for (const t of shown.values()) {
       gl.useProgram(t.prog);
       gl.uniformMatrix4fv(t.vp, false, frame.slice(0, 16));
@@ -210,12 +311,18 @@ export function startEditor(opening) {
       gl.bindVertexArray(t.vao);
       gl.drawElements(gl.TRIANGLES, t.count, gl.UNSIGNED_INT, 0);
     }
+    // The grid is tested against the characters' depth, so it hides behind
+    // them, but writes none of its own.
+    gl.enable(gl.DEPTH_TEST);
+    gl.depthMask(false);
     gl.useProgram(prog);
     gl.uniformMatrix4fv(u.vp, false, frame.slice(0, 16));
     gl.uniform3fv(u.eye, frame.slice(16, 19));
     gl.uniform2fv(u.fade, flat(World.fade(cam)));
     gl.bindVertexArray(vao);
     gl.drawArrays(gl.LINES, 0, lines.length / 6);
+    gl.depthMask(true);
+    gl.disable(gl.DEPTH_TEST);
     // Bones last, over everything, so they show through a skin (x-ray).
     const bones = boneLines();
     if (bones.length) {

@@ -92,3 +92,70 @@ def mesh_frag(+base: N.Node) -> String:
     G.lines(g),
     [String.concat(["  color = vec4(", G.output(g), ", 1.0);"]),
      "}"]]))
+
+# Skinned meshes
+# ==============
+#
+# A character's skin (engine/skin.bend). Each vertex carries 4 bone
+# indices and 4 weights (16-bit, read as 0..1). The skinning matrices sit
+# in a float texture, one bone per row of 4 texels (one matrix column
+# each), because WebGL2 only promises 256 uniform vectors in a vertex
+# shader: about 60 bones as uniforms, and the reference rig has 171.
+
+def skinned_vert() -> String:
+  program([
+    "#version 300 es",
+    "precision highp float;",
+    "precision highp int;",
+    "uniform mat4 u_vp;",
+    "uniform highp sampler2D u_bones;",
+    "in vec3 a_pos;",
+    "in vec3 a_normal;",
+    "in vec2 a_uv;",
+    "in uvec4 a_joints;",
+    "in vec4 a_weights;",
+    "out vec3 v_normal;",
+    "out vec2 v_uv;",
+    "mat4 bone(uint i) {",
+    "  int r = int(i);",
+    "  return mat4(texelFetch(u_bones, ivec2(0, r), 0), texelFetch(u_bones, ivec2(1, r), 0),",
+    "              texelFetch(u_bones, ivec2(2, r), 0), texelFetch(u_bones, ivec2(3, r), 0));",
+    "}",
+    "void main() {",
+    "  mat4 m = a_weights.x * bone(a_joints.x) + a_weights.y * bone(a_joints.y)",
+    "         + a_weights.z * bone(a_joints.z) + a_weights.w * bone(a_joints.w);",
+    "  v_normal = mat3(m) * a_normal;",
+    "  v_uv = a_uv;",
+    "  gl_Position = u_vp * (m * vec4(a_pos, 1.0));",
+    "}"])
+
+# Light: one sun and the sky. Wrapped diffuse ("half Lambert": the shadow
+# side never goes black) keeps a stylized, soft look; a faint rim from the
+# sky lifts the outline. Base color from the texture, or u_tint without one.
+def skinned_frag() -> String:
+  program([
+    "#version 300 es",
+    "precision highp float;",
+    "uniform sampler2D u_tex;",
+    "uniform float u_textured;",
+    "uniform vec3 u_tint;",
+    "uniform vec3 u_sun;",
+    "uniform vec3 u_eye_dir;",
+    "in vec3 v_normal;",
+    "in vec2 v_uv;",
+    "out vec4 color;",
+    "void main() {",
+    "  vec3 n = normalize(v_normal);",
+    "  if (!gl_FrontFacing) n = -n;",
+    "  vec4 tex = texture(u_tex, v_uv);",
+    "  if (u_textured > 0.5 && tex.a < 0.5) discard;",
+    "  vec3 base = mix(u_tint, tex.rgb, u_textured);",
+    "  float wrap = dot(n, normalize(u_sun)) * 0.5 + 0.5;",
+    "  float light = 0.35 + 0.75 * wrap * wrap;",
+    "  float rim = pow(1.0 - max(dot(n, -normalize(u_eye_dir)), 0.0), 3.0) * 0.15;",
+    "  color = vec4(base * light + rim, 1.0);",
+    "}"])
+
+# Where the sun comes from: high, in front and to the left (unit length).
+def sun() -> List<&2, F32>:
+  [0.42, 0.78, 0.46]

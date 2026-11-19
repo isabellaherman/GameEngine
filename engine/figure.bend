@@ -10,6 +10,7 @@
 #          hand when reduce_motion is on)
 #   speed  how fast the character moves, in m/s: 0 stands (idle), the
 #          walk's own speed (1.3) walks; in between the two blend
+#   bones  1 draws the skeleton over the skin (x-ray), 0 hides it
 #
 # The pose a figure takes is a pure function of the figure: nothing about
 # animation is hidden in state. That is what lets a networked game rebuild
@@ -31,13 +32,22 @@ import ./gait.bend as G
 import ./blend.bend as B
 import ./material.bend as Mat
 import ./transform.bend as Tr
+import ./skin.bend as Skin
 
 type Figure is Data:
   Figure{skeleton: Sk.Skeleton, skin: String, params: List<&2, Mat.Value>, idle: C.Clip, walk: C.Clip}
 
+def pick_n(c: Bool, +a: F32, +b: F32) -> F32:
+  match c:
+    case True{}:
+      a
+    case False{}:
+      b
+
 # A figure for a skeleton, standing at time 0, with the code-made clips.
+# Its bones show when it has no skin.
 def make(+s: Sk.Skeleton, +skin: String) -> Figure:
-  Figure{s, skin, [Mat.Value{"time", [0.0]}, Mat.Value{"speed", [0.0]}], G.idle(s), G.walk(s)}
+  Figure{s, skin, [Mat.Value{"time", [0.0]}, Mat.Value{"speed", [0.0]}, Mat.Value{"bones", [pick_n(String.eq(skin, ""), 1.0, 0.0)]}], G.idle(s), G.walk(s)}
 
 def empty() -> Figure:
   make(Sk.Skeleton{Nil{}}, "")
@@ -107,10 +117,19 @@ def pose(+f: Figure) -> P.Pose:
   +rest = P.rest(skeleton(f))
   B.mix(C.sample(idle(f), rest, param(f, "time")), C.sample(walk(f), rest, walk_time(f)), walk_weight(f))
 
+# Should the editor draw the bones? (the "bones" parameter)
+def shows_bones(+f: Figure) -> Bool:
+  F32.is_gt(param(f, "bones"), 0.5)
+
 # The figure's bones as lines in the World (6 floats per end), standing
 # where `place` puts it.
 def lines(+f: Figure, +place: Tr.Transform) -> List<&2, F32>:
   P.lines(skeleton(f), pose(f), place)
+
+# The skinning matrices of the figure's pose (engine/skin.bend), 16 floats
+# per bone, standing where `place` puts it.
+def palette(+f: Figure, +place: Tr.Transform) -> List<&2, F32>:
+  Skin.palette(skeleton(f), pose(f), place)
 
 # Time
 # ====
