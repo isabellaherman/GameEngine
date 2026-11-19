@@ -17,6 +17,8 @@ import ./projects/water/scene.bend as Content
 import ./editor/panels/panels.bend as O
 import ./engine/vec.bend as V
 import ./PROJECT.bend as P
+import ./engine/skeleton.bend as Sk
+import ./projects/character/arm.bend as Arm
 
 # ---------- Shortcuts ----------
 
@@ -178,3 +180,51 @@ law editing_past_the_end_changes_nothing:
 law every_project_opens_complete:
   for p: P.Project
   {S.complete(P.start(p)) == True{} : Bool}
+
+# ---------- Skeletons ----------
+# The rig standard's structural laws (engine/skeleton.bend), on the test arm
+# and on skeletons that break each one.
+
+# LAW: the test arm keeps every structural law.
+law arm_is_valid:
+  {Sk.valid(Arm.skeleton()) == True{} : Bool}
+
+# LAW: the test arm has one root, three deform bones, one twist, one support.
+law arm_has_its_roles:
+  {Sk.role_counts(Arm.skeleton()) == [1, 3, 1, 1, 0] : List<&2, U32>}
+
+# LAW: the test arm's hand is found by its slot.
+law arm_hand_has_a_slot:
+  {Sk.find_slot(Arm.skeleton(), "hand.L") == 4 : U32}
+
+# LAW: a bone listed before its parent breaks the order.
+law child_before_parent_is_invalid:
+  for t: Tr.Transform
+  {Sk.valid(Sk.Skeleton{[
+     Sk.Bone{"root", "root", Sk.Root{}, 0, t, 0.0},
+     Sk.Bone{"a", "", Sk.Deform{}, 2, t, 0.0},
+     Sk.Bone{"b", "", Sk.Deform{}, 0, t, 0.0}]}) == False{} : Bool}
+
+# LAW: a second root is not allowed.
+law two_roots_are_invalid:
+  for t: Tr.Transform
+  {Sk.valid(Sk.Skeleton{[
+     Sk.Bone{"root", "root", Sk.Root{}, 0, t, 0.0},
+     Sk.Bone{"another root", "", Sk.Root{}, 0, t, 0.0}]}) == False{} : Bool}
+
+# LAW: a Deform bone may not hang from a computed bone.
+law deform_under_twist_is_invalid:
+  for t: Tr.Transform
+  {Sk.valid(Sk.Skeleton{[
+     Sk.Bone{"root", "root", Sk.Root{}, 0, t, 0.0},
+     Sk.Bone{"twist", "", Sk.Twist{}, 0, t, 0.0},
+     Sk.Bone{"hand", "", Sk.Deform{}, 1, t, 0.0}]}) == False{} : Bool}
+
+# LAW: helpers may hang from helpers (the reference rig does this).
+law support_under_twist_is_valid:
+  for t: Tr.Transform
+  {Sk.valid(Sk.Skeleton{[
+     Sk.Bone{"root", "root", Sk.Root{}, 0, t, 0.0},
+     Sk.Bone{"arm", "", Sk.Deform{}, 0, t, 0.0},
+     Sk.Bone{"twist", "", Sk.Twist{}, 1, t, 0.0},
+     Sk.Bone{"fix", "", Sk.Support{}, 2, t, 0.0}]}) == True{} : Bool}

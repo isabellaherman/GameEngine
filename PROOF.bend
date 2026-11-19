@@ -100,3 +100,24 @@ def Laws.every_project_opens_complete(p):
       {==}
     case P.Character{}:
       {==}
+
+def Laws.arm_is_valid():
+  {==}
+
+def Laws.arm_has_its_roles():
+  {==}
+
+def Laws.arm_hand_has_a_slot():
+  {==}
+
+def Laws.child_before_parent_is_invalid(t):
+  {==}
+
+def Laws.two_roots_are_invalid(t):
+  {==}
+
+def Laws.deform_under_twist_is_invalid(t):
+  {==}
+
+def Laws.support_under_twist_is_valid(t):
+  {==}
