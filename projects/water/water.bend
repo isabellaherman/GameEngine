@@ -1,4 +1,4 @@
-# Water: the shape and material of the scene's water (content/scene.bend
+# Water: the shape and material of the scene's water (projects/water/scene.bend
 # puts it in the World).
 #
 # This is content, not engine code: one particular water. The engine's
@@ -15,12 +15,12 @@
 #   water graph (step 11).
 
 import Base
-import ../engine/vec.bend as V
-import ../engine/color.bend as C
-import ../engine/mesh.bend as M
-import ../engine/shader/node.bend as N
-import ../engine/material.bend as Mat
-import ../node_modules/bend-ui/TOKENS.bend as T
+import ../../engine/vec.bend as V
+import ../../engine/color.bend as C
+import ../../engine/mesh.bend as M
+import ../../engine/shader/node.bend as N
+import ../../engine/material.bend as Mat
+import ../../node_modules/bend-ui/TOKENS.bend as T
 
 # The shape: a 20 m square cut into 40 × 40 cells, half a meter each.
 # Waves will move each vertex, so it needs many of them.

@@ -1,6 +1,6 @@
 // The browser side of the engine. It only reads the mouse and draws what
 // Bend returns: the World (engine/world.bend) and the camera
-// (engine/camera.bend) decide every number, the scene (content/scene.bend)
+// (engine/camera.bend) decide every number, the scene (PROJECT.bend opens a project)
 // says what is in the World, engine/shader/glsl.bend writes the shaders and
 // engine/material.bend gives the values of their parameters.
 
@@ -9,7 +9,7 @@ import { createKeys } from "bend-ui/keys";
 import Keys from "./KEYS.bend";
 import World from "./engine/world.bend";
 import Scene from "./engine/scene.bend";
-import Content from "./content/scene.bend";
+import Project from "./PROJECT.bend";
 import Camera from "./engine/camera.bend";
 import Glsl from "./engine/shader/glsl.bend";
 import Material from "./engine/material.bend";
@@ -85,7 +85,7 @@ function setValues(p, values) {
   }
 }
 
-// The scene (content/scene.bend): every thing that is shown gets, once, its
+// The scene (the project PROJECT.bend opens): every thing that is shown gets, once, its
 // shader (from its material), its mesh on the GPU (3 floats per vertex,
 // 3 indices per triangle) and its model matrix (from its place).
 // Limit: built once at start-up; a thing added later is not seen (an edit
@@ -115,7 +115,7 @@ function upload(thing) {
   };
 }
 
-let scene = Content.start();
+let scene = Project.opening();
 // Each shown thing, by its place in the scene's list.
 const shown = new Map();
 flat(Scene.things(scene)).forEach((t, i) => { if (Scene.is_shown(t)) shown.set(i, upload(t)); });

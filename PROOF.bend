@@ -2,6 +2,7 @@
 
 import Base
 import ./LAWS.bend as Laws
+import ./PROJECT.bend as P
 
 def Laws.engine_keys_never_clash():
   {==}
@@ -92,3 +93,10 @@ def Laws.editing_a_value_keeps_the_graph(x):
 
 def Laws.editing_past_the_end_changes_nothing(x):
   {==}
+
+def Laws.every_project_opens_complete(p):
+  match p:
+    case P.Water{}:
+      {==}
+    case P.Character{}:
+      {==}

@@ -14,7 +14,7 @@
 #   thing that is not drawn.
 #
 # This file is engine code: the types every scene uses. A real scene, with
-# its things, is content and lives in content/ (content/scene.bend).
+# its things, is content and lives in a project (projects/*/scene.bend).
 #
 # Limits now:
 # - The scene is a plain list of things. That is enough for a few things;

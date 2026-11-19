@@ -10,12 +10,13 @@ import ./engine/mesh.bend as Mesh
 import ./engine/shader/node.bend as N
 import ./engine/shader/compile.bend as G
 import ./engine/material.bend as Mat
-import ./content/water.bend as Water
+import ./projects/water/water.bend as Water
 import ./engine/scene.bend as S
 import ./engine/transform.bend as Tr
-import ./content/scene.bend as Content
+import ./projects/water/scene.bend as Content
 import ./editor/panels/panels.bend as O
 import ./engine/vec.bend as V
+import ./PROJECT.bend as P
 
 # ---------- Shortcuts ----------
 
@@ -169,3 +170,11 @@ law editing_past_the_end_changes_nothing:
   for x: F32
   {O.apply(S.Scene{[S.Thing{"w", Tr.identity(), S.Shown{Mesh.plane(1.0, 1), Water.material()}}]}, 7, O.Pos{0}, x) == S.Scene{[S.Thing{"w", Tr.identity(), S.Shown{Mesh.plane(1.0, 1), Water.material()}}]} : S.Scene}
 
+
+# ---------- Projects ----------
+
+# LAW: every project opens with a complete scene (each drawn thing's
+# material has a value for every parameter).
+law every_project_opens_complete:
+  for p: P.Project
+  {S.complete(P.start(p)) == True{} : Bool}

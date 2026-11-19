@@ -10,8 +10,8 @@
 # - The editor shows things in this order; there is no other id.
 
 import Base
-import ../engine/scene.bend as S
-import ../engine/transform.bend as Tr
+import ../../engine/scene.bend as S
+import ../../engine/transform.bend as Tr
 import ./water.bend as Water
 
 def start() -> S.Scene:
