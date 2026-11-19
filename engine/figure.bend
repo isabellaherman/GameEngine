@@ -21,6 +21,10 @@
 # - The skin is a path, read by the browser; the mesh itself never passes
 #   through Bend (too many numbers). Its laws are checked when it is made
 #   (tools/gltf.ts).
+# - Cost: the reference rig (171 bones) takes about 17 ms per frame for
+#   pose + skin matrices on the JS target (measured in Bun, warm), at the
+#   edge of 60 fps. Most of it is list lookups (each one walks the list);
+#   arrays (Bend's Array type) are the planned fix.
 # - One clock for idle and walk: while walking, the idle's breath runs at
 #   the walk's pace too (it barely shows under the walk).
 
@@ -32,13 +36,14 @@ import ./gait.bend as G
 import ./blend.bend as B
 import ./material.bend as Mat
 import ./transform.bend as Tr
+import ./vec.bend as V
 import ./skin.bend as Skin
 import ./helpers.bend as H
 import ./ik.bend as IK
 import ./hand.bend as Hand
 
 type Figure is Data:
-  Figure{skeleton: Sk.Skeleton, skin: String, params: List<&2, Mat.Value>, idle: C.Clip, walk: C.Clip, helpers: List<&2, H.Prepared>}
+  Figure{skeleton: Sk.Skeleton, skin: String, params: List<&2, Mat.Value>, idle: C.Clip, walk: C.Clip, helpers: List<&2, H.Prepared>, rest_model: List<&2, V.M4>, inverse: List<&2, V.M4>}
 
 def pick_n(c: Bool, +a: F32, +b: F32) -> F32:
   match c:
@@ -51,38 +56,47 @@ def pick_n(c: Bool, +a: F32, +b: F32) -> F32:
 # and the rules of its helper bones (engine/helpers.bend). Its bones show
 # when it has no skin.
 def make(+s: Sk.Skeleton, +skin: String, rules: List<&2, H.Rule>) -> Figure:
-  Figure{s, skin, [Mat.Value{"time", [0.0]}, Mat.Value{"speed", [0.0]}, Mat.Value{"grip", [0.0]}, Mat.Value{"bones", [pick_n(String.eq(skin, ""), 1.0, 0.0)]}], G.idle(s), G.walk(s), H.prepare(s, rules)}
+  Figure{s, skin, [Mat.Value{"time", [0.0]}, Mat.Value{"speed", [0.0]}, Mat.Value{"grip", [0.0]}, Mat.Value{"bones", [pick_n(String.eq(skin, ""), 1.0, 0.0)]}], G.idle(s), G.walk(s), H.prepare(s, rules), P.model(s, P.rest(s)), Skin.inverse_rest(s)}
 
 def empty() -> Figure:
   make(Sk.Skeleton{Nil{}}, "", Nil{})
 
 def skeleton(f: Figure) -> Sk.Skeleton:
-  Figure{s, _, _, _, _, _} = f
+  Figure{s, _, _, _, _, _, _, _} = f
   s
 
 def skin(f: Figure) -> String:
-  Figure{_, k, _, _, _, _} = f
+  Figure{_, k, _, _, _, _, _, _} = f
   k
 
 def params(f: Figure) -> List<&2, Mat.Value>:
-  Figure{_, _, ps, _, _, _} = f
+  Figure{_, _, ps, _, _, _, _, _} = f
   ps
 
 def idle(f: Figure) -> C.Clip:
-  Figure{_, _, _, i, _, _} = f
+  Figure{_, _, _, i, _, _, _, _} = f
   i
 
 def walk(f: Figure) -> C.Clip:
-  Figure{_, _, _, _, w, _} = f
+  Figure{_, _, _, _, w, _, _, _} = f
   w
 
 def helpers(f: Figure) -> List<&2, H.Prepared>:
-  Figure{_, _, _, _, _, h} = f
+  Figure{_, _, _, _, _, h, _, _} = f
   h
 
+# The skeleton's rest model pose and its inverses, computed once in make().
+def rest_model(f: Figure) -> List<&2, V.M4>:
+  Figure{_, _, _, _, _, _, r, _} = f
+  r
+
+def inverse(f: Figure) -> List<&2, V.M4>:
+  Figure{_, _, _, _, _, _, _, v} = f
+  v
+
 def with_params(f: Figure, ps: List<&2, Mat.Value>) -> Figure:
-  Figure{s, k, _, i, w, h} = f
-  Figure{s, k, ps, i, w, h}
+  Figure{s, k, _, i, w, h, r, v} = f
+  Figure{s, k, ps, i, w, h, r, v}
 
 def pick_f(c: Bool, +a: F32, +b: F32) -> F32:
   match c:
@@ -130,7 +144,7 @@ def walk_time(+f: Figure) -> F32:
 def pose(+f: Figure) -> P.Pose:
   +s = skeleton(f)
   +rest = P.rest(s)
-  H.apply(helpers(f), IK.ground(s, Hand.grip(s, B.mix(C.sample(idle(f), rest, param(f, "time")), C.sample(walk(f), rest, walk_time(f)), walk_weight(f)), param(f, "grip"))))
+  H.apply(helpers(f), IK.ground(s, rest_model(f), Hand.grip(s, B.mix(C.sample(idle(f), rest, param(f, "time")), C.sample(walk(f), rest, walk_time(f)), walk_weight(f)), param(f, "grip"))))
 
 # Should the editor draw the bones? (the "bones" parameter)
 def shows_bones(+f: Figure) -> Bool:
@@ -144,7 +158,7 @@ def lines(+f: Figure, +place: Tr.Transform) -> List<&2, F32>:
 # The skinning matrices of the figure's pose (engine/skin.bend), 16 floats
 # per bone, standing where `place` puts it.
 def palette(+f: Figure, +place: Tr.Transform) -> List<&2, F32>:
-  Skin.palette(skeleton(f), pose(f), place)
+  Skin.palette(skeleton(f), pose(f), place, inverse(f))
 
 # Time
 # ====

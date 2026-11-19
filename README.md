@@ -6,7 +6,7 @@ Needs Bend (`bend`) and a clone of [bendlang/bend](https://github.com/bendlang/b
 ```sh
 bun install
 bun run dev      # http://localhost:3100
-bun run check    # type-check the engine
+bun run check    # laws, types, tests, reference laws, the refs/ fence
 bun run build    # bundle to dist/
 ```
 

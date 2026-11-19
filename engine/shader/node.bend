@@ -20,7 +20,7 @@
 # - Constants (Num, Rgb) are written into the text, so changing one
 #   rebuilds the shader. A value meant to change while you watch is a Param:
 #   a uniform, set from engine/material.bend without rebuilding.
-# - Time reads 0 for now: main.js does not run the clock yet
+# - Time reads 0 for now: the editor does not set u_time yet
 #   (engine/time.bend).
 # - F32.show writes 1.0 as "1", which GLSL reads as an integer and refuses
 #   to mix with floats. number() adds the ".0" back.

@@ -122,13 +122,15 @@ def plant_if(legs: Bool, +s: Sk.Skeleton, +p: P.Pose, +up: U32, +low: U32, +foot
     case False{}:
       p
 
-def plant_side(+s: Sk.Skeleton, +p: P.Pose, +side: String) -> P.Pose:
+def plant_side(+s: Sk.Skeleton, +rest: List<&2, V.M4>, +p: P.Pose, +side: String) -> P.Pose:
   +up = Sk.find_slot(s, String.concat(["upper_leg.", side]))
   +low = Sk.find_slot(s, String.concat(["lower_leg.", side]))
   +foot = Sk.find_slot(s, String.concat(["foot.", side]))
-  +h = V.y(head_of(P.model(s, P.rest(s)), foot))
+  +h = V.y(head_of(rest, foot))
   plant_if((found(s, up) && found(s, low) && found(s, foot)), s, p, up, low, foot, h)
 
 # Both feet on the floor (a skeleton without legs is left as it is).
-def ground(+s: Sk.Skeleton, +p: P.Pose) -> P.Pose:
-  plant_side(s, plant_side(s, p, "L"), "R")
+# `rest` is the skeleton's rest model pose (P.model(s, P.rest(s))), computed
+# once per skeleton: each foot's rest height is read from it.
+def ground(+s: Sk.Skeleton, +rest: List<&2, V.M4>, +p: P.Pose) -> P.Pose:
+  plant_side(s, rest, plant_side(s, rest, p, "L"), "R")

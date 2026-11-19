@@ -8,8 +8,10 @@
 # changes only when the person seeks to a moment.
 #
 # Limits now:
-# - main.js does not run a frame loop yet: nothing moves by itself, so the
-#   clock is not ticked. It joins the frame with the first thing that moves.
+# - The editor runs a frame loop (editor/app.js), but no Clock is ticked:
+#   figures keep their own time parameter (engine/figure.bend's advance,
+#   which follows the same reduce_motion rule). Materials' u_time is not
+#   set yet.
 # - Seconds are an F32, which loses precision as it grows: after about a
 #   day of running, time moves in steps of about 8 ms and waves would
 #   stutter. Going back to 0 at a loop point, or keeping seconds as U32 ms,

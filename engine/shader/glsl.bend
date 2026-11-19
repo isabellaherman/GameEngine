@@ -20,7 +20,8 @@
 #   here and again in main.js; nothing checks that the two match. Material
 #   parameters do not have this problem: main.js asks material.bend for
 #   their names.
-# - No light: a mesh's color comes straight from its graph.
+# - Material meshes have no light: their color comes straight from the
+#   graph. Only the skinned shaders (skinned_frag) are lit, by one sun.
 
 import Base
 import ./node.bend as N

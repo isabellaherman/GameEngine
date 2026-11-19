@@ -21,9 +21,9 @@
 # - The scene is a plain list of things. That is enough for a few things;
 #   with many, storing each component in its own column (full ECS) is an
 #   internal change that leaves this file's meaning the same.
-# - No behaviors yet: nothing moves by itself, so there is no frame(scene,
-#   time) → scene function. It comes with the first thing that moves (the
-#   water's waves are in its material, on the GPU, and need none).
+# - The only behaviors are a character's: advance() moves every figure's
+#   animation time, and engine/locomotion.bend's drive() walks them. Other
+#   things never move by themselves.
 # - No parent and child: every place is measured from the World's origin.
 # - A thing has no id but its place in the list. Two things may share a
 #   name; the editor tells them apart by place, so reordering the list

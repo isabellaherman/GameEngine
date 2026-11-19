@@ -66,7 +66,7 @@
     <div class="split" style="--n: 3">
       <section class="layer"><h2>Front End</h2><div class="row"><div class="b partial">Editor UI</div><div class="b no">In-game HUD</div></div></section>
       <section class="layer"><h2>Visual Effects</h2><div class="row"><div class="b partial">Grid fade</div><div class="b no">Particles</div><div class="b no">Post-processing</div></div></section>
-      <section class="layer"><h2>Animation</h2><div class="row"><div class="b partial">Camera easing</div><div class="b no">Skeletal</div></div></section>
+      <section class="layer"><h2>Animation</h2><div class="row"><div class="b partial">Camera easing</div><div class="b yes">Skeletal</div></div></section>
     </div>
 
     <section class="layer">
@@ -132,11 +132,11 @@
     <tr><td>Colors</td><td><code>engine/color.bend</code></td><td>Bend-UI tokens as RGB.</td></tr>
     <tr><td>Shaders</td><td><code>engine/shader/glsl.bend</code>, <code>node.bend</code>, <code>compile.bend</code></td><td>Bend writes the GLSL; main.js only hands it to the driver. Typed nodes (float, vec3: number, color, time, add, mul, sin, mix); the compiler gives each node one named line, in order, and writes a repeated node once. Param nodes become uniforms.</td></tr>
     <tr><td>Materials</td><td><code>engine/material.bend</code></td><td>A graph plus values for its parameters (uniforms). Instances share the graph. A law checks each material is complete. No fields to edit values yet.</td></tr>
-    <tr><td>Meshes</td><td><code>engine/mesh.bend</code></td><td>Vertices + indices, CCW triangles. A plane generator. No depth test yet.</td></tr>
+    <tr><td>Meshes</td><td><code>engine/mesh.bend</code></td><td>Vertices + indices, CCW triangles. A plane generator. Material meshes draw without the depth test; skinned characters use it.</td></tr>
     <tr><td>Transform</td><td><code>engine/transform.bend</code></td><td>Position, rotation (quaternion), scale; the model matrix T·R·S goes to the GPU as u_model. No parent and child yet.</td></tr>
     <tr><td>Scene</td><td><code>engine/scene.bend</code>, <code>projects/water/scene.bend</code></td><td>Data-oriented (ECS-style): a scene is a value, a thing is data (name, place, look). Engine types in engine/, each actual scene in a project (projects/). No behaviors, no parent and child yet.</td></tr>
     <tr><td>Water</td><td><code>projects/water/water.bend</code></td><td>Content: the water's shape (20 m plane, 40 × 40 cells) and material (one parameter, tone).</td></tr>
-    <tr><td>Time</td><td><code>engine/time.bend</code></td><td>The clock: tick, seek, play, pause. reduce_motion freezes it (a law). Not wired to a frame loop yet.</td></tr>
+    <tr><td>Time</td><td><code>engine/time.bend</code></td><td>The clock: tick, seek, play, pause. reduce_motion freezes it (a law). The editor runs a frame loop; figures keep their own time parameter.</td></tr>
     <tr><td>Build</td><td><code>tools/dev.ts</code>, <code>package.json</code></td><td>Dev server, bundle, manual deploy to GitHub Pages.</td></tr>
   </table>
 </main>

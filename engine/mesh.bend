@@ -12,9 +12,9 @@
 # Limits now:
 # - A vertex is only a position. No normal (needed for light), no UV
 #   (needed for textures), no color. Each comes when something needs it.
-# - Nothing checks depth when main.js draws: what is drawn last shows on
-#   top. That works while everything lies on the ground; meshes in front of
-#   each other will need the GPU's depth test.
+# - Material meshes are drawn without the depth test (what is drawn last
+#   shows on top); only skinned characters and the grid use it
+#   (editor/app.js).
 # - A mesh is built once, as Bend lists, and main.js copies it into a flat
 #   array for the GPU. Building it every frame would be slow, so moving
 #   vertices (waves) belongs in the vertex shader, not here.

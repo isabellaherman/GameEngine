@@ -300,9 +300,10 @@ export function startEditor(opening, { skins = {}, camera = null } = {}) {
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-    // The scene's things first, in order, then the grid over them: the water
-    // lies on y = 0 with the grid, so drawing order decides who shows (there
-    // is no depth test yet).
+    // Characters first, with the depth test. Then the scene's material
+    // things, in order, without it: the water lies on y = 0 with the grid,
+    // so drawing order decides who shows. Then the grid, tested against the
+    // characters only.
     gl.enable(gl.DEPTH_TEST);
     drawSkins(frame);
     gl.disable(gl.DEPTH_TEST);

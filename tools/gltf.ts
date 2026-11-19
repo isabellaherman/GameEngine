@@ -3,9 +3,13 @@
 //
 //   bun tools/gltf.ts <character.glb> <rig.json> <out dir>
 //
-// It writes two things into <out dir>:
+// It writes five files into <out dir>:
 // - skeleton.bend  the skeleton as a Bend value: def skeleton() -> Sk.Skeleton.
 //                  `bun run check` and the laws read it like any Bend code.
+// - rules.bend     one rule per Twist and Support bone (engine/helpers.bend),
+//                  from rig.json's rules.
+// - weights.bend   every vertex's 4 joints and 4 weights again, as Bend, so
+//                  the laws can check them (engine/skin.bend).
 // - skin.bin + skin.json  the mesh: positions, normals, UVs, 4 joints and
 //                  4 weights per vertex, and triangles. Too many numbers to
 //                  pass through Bend each frame; main.js hands them to the GPU.
@@ -34,7 +38,11 @@
 // Limits now:
 // - Reads only what the reference needs: one skin, triangle lists,
 //   JOINTS_0 and WEIGHTS_0 (the first 4 influences, as glTF allows),
-//   no animations, no morph targets, no textures (paths come from rig.json).
+//   no animations, no morph targets, no textures (the page that shows the
+//   character passes its texture files to the editor).
+// - Reading only JOINTS_0/WEIGHTS_0 means a file with more than 4
+//   influences per vertex silently loses the rest; the "more than 4" check
+//   can only fire once JOINTS_1 is read.
 // - The rest pose must have scale 1 (within 0.001): the engine inverts rest
 //   matrices as rotation + translation (engine/skin.bend).
 

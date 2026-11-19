@@ -76,9 +76,10 @@ def palette_go(ws: List<&2, V.M4>, vs: List<&2, V.M4>) -> List<&2, F32>:
           List.append(&2, F32, numbers(V.mul(w, i)), palette_go(wt, it))
 
 # The skinning matrices of a pose, 16 floats per bone in the skeleton's
-# order, with the character standing where `place` puts it.
-def palette(+s: Sk.Skeleton, p: P.Pose, +place: Tr.Transform) -> List<&2, F32>:
-  palette_go(P.world(s, p, place), inverse_rest(s))
+# order, with the character standing where `place` puts it. `inverse` is
+# inverse_rest(s), computed once per skeleton (engine/figure.bend keeps it).
+def palette(+s: Sk.Skeleton, p: P.Pose, +place: Tr.Transform, inverse: List<&2, V.M4>) -> List<&2, F32>:
+  palette_go(P.world(s, p, place), inverse)
 
 # Weights
 # =======

@@ -25,8 +25,9 @@
 # - The amounts are set by eye, not measured on the mesh.
 # - A Full rule scales the joint's turn as one rotation; joints that bend
 #   and twist at once (a shoulder) may need a rule per axis.
-# - Rules run in list order and see the pose after the clip only, so a
-#   helper cannot drive another helper.
+# - Rules run in list order, last in the pose (after the clip, the blend,
+#   the grip and the IK), and read Deform bones only, so a helper cannot
+#   drive another helper.
 
 import Base
 import ./vec.bend as V

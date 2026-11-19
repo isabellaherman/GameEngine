@@ -16,10 +16,10 @@
 #
 # Limits now:
 # - The shapes are sines, tuned by eye: a stylized walk, not captured
-#   motion. Feet can slide a little, since nothing plants them yet
-#   (engine/ik.bend will).
-# - Only the body's big bones move. Fingers, twist and support bones follow
-#   their parents until their own steps (helpers, hand poses).
+#   motion. Feet can slide a little: engine/ik.bend only lifts a foot that
+#   would sink, it does not pin a foot that touches the floor.
+# - Only the body's big bones are in these clips. Fingers come from
+#   engine/hand.bend, twist and support bones from engine/helpers.bend.
 # - The arms come down from the T-pose by a fixed turn (72°), which suits
 #   a rig whose rest pose is a T.
 
