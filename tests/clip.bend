@@ -12,6 +12,7 @@ import ../engine/blend.bend as B
 import ../engine/gait.bend as G
 import ../projects/character/arm.bend as Arm
 import ../engine/helpers.bend as H
+import ../engine/hand.bend as Hand
 
 type Check is Data:
   Check{name: String, ok: Bool}
@@ -44,6 +45,9 @@ def forearm(+p: P.Pose) -> Q.Q:
 def hand(+p: P.Pose) -> V.V3:
   P.head(P.m4_at(P.model(Arm.skeleton(), p), 4))
 
+def fingertip(+p: P.Pose) -> V.V3:
+  P.tail(P.m4_at(P.model(Arm.skeleton(), p), 7), 0.03)
+
 def track_count(+c: C.Clip) -> U32:
   U32.from_nat(List.length(&2, U32, C.bones(c)))
 
@@ -68,5 +72,9 @@ def checks() -> List<&2, Check>:
      closeq(Tr.rotation(P.local_at(H.apply(H.prepare(Arm.skeleton(), Arm.rules()), C.sample(bend(), rest(), 0.9999)), 5)), eighth())},
    Check{"at rest, every helper stays at rest",
      closeq(Tr.rotation(P.local_at(H.apply(H.prepare(Arm.skeleton(), Arm.rules()), rest()), 3)), Q.identity())},
+   Check{"a fist brings the fingertip closer to the hand",
+     F32.is_lt(V.dist(fingertip(Hand.grip(Arm.skeleton(), rest(), 1.0)), hand(rest())), V.dist(fingertip(rest()), hand(rest())))},
+   Check{"grip 0 leaves the fingers as they are",
+     close3(fingertip(Hand.grip(Arm.skeleton(), rest(), 0.0)), fingertip(rest()))},
    Check{"in the idle the arm hangs: the hand is below the shoulder",
      F32.is_lt(V.y(hand(C.sample(G.idle(Arm.skeleton()), rest(), 0.0))), 1.2)}]

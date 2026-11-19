@@ -1,7 +1,7 @@
 # The engine's own test character: a left arm, written by hand.
 #
-# Six bones, one of each role but Chain, laid out like the reference rig's
-# arm: shoulder → upper arm → forearm → hand, with a twist bone halfway
+# Eight bones, one of each role but Chain, laid out like the reference rig's
+# arm: shoulder → upper arm → forearm → hand → two index segments, with a twist bone halfway
 # down the forearm and a support bone at the elbow. It lets every
 # animation step be tested without the reference rig (refs/), which never
 # ships.
@@ -31,7 +31,9 @@ def skeleton() -> Sk.Skeleton:
     Sk.Bone{"forearm", "lower_arm.L", Sk.Deform{}, 1, along(0.3), 0.25},
     Sk.Bone{"forearm twist", "", Sk.Twist{}, 2, along(0.12), 0.08},
     Sk.Bone{"hand", "hand.L", Sk.Deform{}, 2, along(0.25), 0.1},
-    Sk.Bone{"elbow fix", "", Sk.Support{}, 1, along(0.3), 0.06}]}
+    Sk.Bone{"elbow fix", "", Sk.Support{}, 1, along(0.3), 0.06},
+    Sk.Bone{"index 1", "index_1.L", Sk.Deform{}, 4, along(0.1), 0.04},
+    Sk.Bone{"index 2", "index_2.L", Sk.Deform{}, 6, along(0.04), 0.03}]}
 
 # The helpers' rules: the forearm twist takes half the hand's roll, and the
 # elbow support turns half as much as the elbow bends.

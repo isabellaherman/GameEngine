@@ -86,3 +86,8 @@ def z(v: V3) -> F32:
 def xyz(v: V4) -> V3:
   V4{a, b, c, _} = v
   V3{a, b, c}
+
+# The distance between two points.
+def dist(+a: V3, +b: V3) -> F32:
+  +d = sub(a, b)
+  F32.sqrt(dot(d, d))

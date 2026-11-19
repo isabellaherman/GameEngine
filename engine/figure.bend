@@ -10,6 +10,7 @@
 #          hand when reduce_motion is on)
 #   speed  how fast the character moves, in m/s: 0 stands (idle), the
 #          walk's own speed (1.3) walks; in between the two blend
+#   grip   how closed the hands are: 0 open, 1 a fist (engine/hand.bend)
 #   bones  1 draws the skeleton over the skin (x-ray), 0 hides it
 #
 # The pose a figure takes is a pure function of the figure: nothing about
@@ -34,6 +35,7 @@ import ./transform.bend as Tr
 import ./skin.bend as Skin
 import ./helpers.bend as H
 import ./ik.bend as IK
+import ./hand.bend as Hand
 
 type Figure is Data:
   Figure{skeleton: Sk.Skeleton, skin: String, params: List<&2, Mat.Value>, idle: C.Clip, walk: C.Clip, helpers: List<&2, H.Prepared>}
@@ -49,7 +51,7 @@ def pick_n(c: Bool, +a: F32, +b: F32) -> F32:
 # and the rules of its helper bones (engine/helpers.bend). Its bones show
 # when it has no skin.
 def make(+s: Sk.Skeleton, +skin: String, rules: List<&2, H.Rule>) -> Figure:
-  Figure{s, skin, [Mat.Value{"time", [0.0]}, Mat.Value{"speed", [0.0]}, Mat.Value{"bones", [pick_n(String.eq(skin, ""), 1.0, 0.0)]}], G.idle(s), G.walk(s), H.prepare(s, rules)}
+  Figure{s, skin, [Mat.Value{"time", [0.0]}, Mat.Value{"speed", [0.0]}, Mat.Value{"grip", [0.0]}, Mat.Value{"bones", [pick_n(String.eq(skin, ""), 1.0, 0.0)]}], G.idle(s), G.walk(s), H.prepare(s, rules)}
 
 def empty() -> Figure:
   make(Sk.Skeleton{Nil{}}, "", Nil{})
@@ -122,12 +124,13 @@ def walk_time(+f: Figure) -> F32:
   param(f, "time")
 
 # The pose the figure takes now: the idle and the walk, sampled and mixed
-# by speed; the feet kept on the floor (engine/ik.bend); then the helper
-# bones' rules on top. Gregory's pipeline: sample, blend, post-process.
+# by speed; the hands closed by grip; the feet kept on the floor
+# (engine/ik.bend); then the helper bones' rules on top. Gregory's
+# pipeline: sample, blend, post-process.
 def pose(+f: Figure) -> P.Pose:
   +s = skeleton(f)
   +rest = P.rest(s)
-  H.apply(helpers(f), IK.ground(s, B.mix(C.sample(idle(f), rest, param(f, "time")), C.sample(walk(f), rest, walk_time(f)), walk_weight(f))))
+  H.apply(helpers(f), IK.ground(s, Hand.grip(s, B.mix(C.sample(idle(f), rest, param(f, "time")), C.sample(walk(f), rest, walk_time(f)), walk_weight(f)), param(f, "grip"))))
 
 # Should the editor draw the bones? (the "bones" parameter)
 def shows_bones(+f: Figure) -> Bool:

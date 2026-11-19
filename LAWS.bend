@@ -193,9 +193,10 @@ law every_project_opens_complete:
 law arm_is_valid:
   {Sk.valid(Arm.skeleton()) == True{} : Bool}
 
-# LAW: the test arm has one root, three deform bones, one twist, one support.
+# LAW: the test arm has one root, five deform bones (three arm, two
+# finger), one twist, one support.
 law arm_has_its_roles:
-  {Sk.role_counts(Arm.skeleton()) == [1, 3, 1, 1, 0] : List<&2, U32>}
+  {Sk.role_counts(Arm.skeleton()) == [1, 5, 1, 1, 0] : List<&2, U32>}
 
 # LAW: the test arm's hand is found by its slot.
 law arm_hand_has_a_slot:
