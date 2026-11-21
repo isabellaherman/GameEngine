@@ -10,6 +10,6 @@
     "test": "bun tools/test.ts"
   },
   "dependencies": {
-    "bend-ui": "github:isabellaherman/Bend-UI"
+    "bend-ui": "github:isabellaherman/Bend-UI#433e547"
   }
 }

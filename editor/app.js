@@ -7,6 +7,7 @@
 // engine/material.bend gives the values of their parameters.
 
 import { theme } from "bend-ui";
+import { mount } from "bend-ui/web";
 import { createKeys } from "bend-ui/keys";
 import Keys from "../KEYS.bend";
 import World from "../engine/world.bend";
@@ -17,8 +18,7 @@ import Material from "../engine/material.bend";
 import Transform from "../engine/transform.bend";
 import Figure from "../engine/figure.bend";
 import { mountDefaults } from "./defaults/defaults.js";
-import { mountPanels } from "./panels/panels.js";
-import Panels from "./panels/panels.bend";
+import Panels from "./panels/view.bend";
 import Defaults from "./defaults/defaults.bend";
 import Loco from "../engine/locomotion.bend";
 
@@ -100,7 +100,7 @@ export function startEditor(opening, { skins = {}, camera = null } = {}) {
   // shader (from its material), its mesh on the GPU (3 floats per vertex,
   // 3 indices per triangle) and its model matrix (from its place).
   // Limit: built once at start-up; a thing added later is not seen (an edit
-  // of place or values is: see edit() below).
+  // of place or values is: see edited() below).
   function upload(thing) {
     const look = Scene.look(thing);
     const material = Scene.material(look);
@@ -131,11 +131,10 @@ export function startEditor(opening, { skins = {}, camera = null } = {}) {
   const shown = new Map();
   flat(Scene.things(scene)).forEach((t, i) => { if (Scene.is_shown(t)) shown.set(i, upload(t)); });
 
-  // An edit in the Details panel: panels.bend gives the next scene; the GPU
-  // gets the thing's new matrix and values. The graph never changes, so no
+  // After an edit in the Details panel (panels.bend gave the next scene): the
+  // GPU gets thing i's new matrix and values. The graph never changes, so no
   // shader is compiled.
-  function edit(i, e, value) {
-    scene = Panels.apply(scene, i, e, value);
+  function edited(i) {
     const g = shown.get(i);
     if (g) {
       const thing = Scene.at(scene, i);
@@ -267,18 +266,34 @@ export function startEditor(opening, { skins = {}, camera = null } = {}) {
   let cam = camera ?? Camera.start();
   let queued = false;
 
+  // The system asking for reduced motion (ACCESSIBILITY.bend decides what it means, through Editor Defaults).
+  const still = matchMedia("(prefers-reduced-motion: reduce)");
+
   const defaults = mountDefaults(document.getElementById("editor-defaults"), {
     getCam: () => cam,
     setCam: (c) => { cam = c; redraw(); },
     orbit: (c, dx, dy) => Camera.orbit(c, dx, dy),
   });
 
-  // The Scene and Details panels (editor/panels/): the scene's things and the
-  // selected one's components.
-  mountPanels(document.getElementById("editor-panels"), {
-    getScene: () => scene,
-    edit,
+  // The Scene and Details panels (editor/panels/view.bend): the scene's things and the
+  // selected one's components. Bend says what they show and what a click or a typed number
+  // does; Bend-UI's driver draws it. When an edit made a new scene, it comes back here.
+  const panels = mount(document.getElementById("editor-panels"), {
+    init: () => Panels.start(scene, still.matches),
+    render: Panels.render, on_event: Panels.on_event, on_input: Panels.on_input,
+  }, {
+    adopt: true,
+    changed: (st) => {
+      const next = Panels.scene(st);
+      if (next === scene) return;   // a thing was picked: the scene is the same
+      scene = next;
+      edited(Panels.selected(st));
+    },
   });
+  still.addEventListener("change", () => panels.dispatch(Panels.motion_event(still.matches)));
+  // The scene moved on outside the panels (a walk, the clock): they get it, and draw it at their
+  // next event, as before (the Details fields are not drawn again every frame).
+  const moved = (next) => { scene = next; panels.set(Panels.with_scene(panels.state, scene), { render: false }); };
 
   // Shortcuts: the keymap and what each view looks from are KEYS.bend.
   {
@@ -343,14 +358,12 @@ export function startEditor(opening, { skins = {}, camera = null } = {}) {
   // motion is not reduced (ACCESSIBILITY.bend, through Editor Defaults).
   // With reduce_motion on, a character moves only when its time is typed
   // in the Details panel.
-  const still = matchMedia("(prefers-reduced-motion: reduce)");
   let last = 0;
   function tick(now) {
     const dt = last ? (now - last) / 1000 : 0;
     last = now;
     if (Scene.animated(scene) && !Defaults.reduce_motion(still.matches)) {
-      scene = Loco.drive(scene, held(), dt, false);
-      scene = Scene.advance(scene, dt, false);
+      moved(Scene.advance(Loco.drive(scene, held(), dt, false), dt, false));
       redraw();
     }
     requestAnimationFrame(tick);
@@ -379,7 +392,7 @@ export function startEditor(opening, { skins = {}, camera = null } = {}) {
     if (Defaults.reduce_motion(still.matches)) {
       if (e.repeat) return;
       const a = walkKeys.get(key);
-      scene = Loco.drive(scene, Loco.input(Keys.walk_forward(a), Keys.walk_turn(a)), 0, true);
+      moved(Loco.drive(scene, Loco.input(Keys.walk_forward(a), Keys.walk_turn(a)), 0, true));
       redraw();
     } else down.add(key);
   });

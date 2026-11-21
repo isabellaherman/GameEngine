@@ -35,8 +35,8 @@ bun run build    # bundle to dist/
 | `engine/figure.bend` | The character component: skeleton, skin, clips, helpers, parameters (time, speed, grip, bones) |
 | `engine/locomotion.bend` | Walking through the World: Run (keys held) and Step (one step per press, for reduce_motion) |
 | `editor/app.js` | The editor: reads input, draws what Bend returns (WebGL2), shared by every page |
-| `editor/defaults/` | Editor Defaults: gizmo + info, accessibility (`ACCESSIBILITY.bend`) |
-| `editor/panels/` | The Scene and Details panels |
+| `editor/defaults/` | Editor Defaults: gizmo + info, accessibility (`ACCESSIBILITY.bend`). The info button is a page written in Bend (`view.bend`); the gizmo is a canvas (`defaults.js`) |
+| `editor/panels/` | The Scene and Details panels: what they hold (`panels.bend`) and what is drawn for it (`view.bend`, a page written in Bend). No JS of their own: Bend-UI's driver draws them |
 | `tools/gltf.ts` | The importer: a .glb + rig.json → skeleton, rules, weights (Bend) and skin.bin |
 | `tools/check.ts` | `bun run check`: laws, types, tests, reference laws, the refs/ fence |
 | `tests/` | Numerical tests (`checks()` lists), run by `tools/test.ts` |

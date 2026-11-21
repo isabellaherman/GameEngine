@@ -5,8 +5,8 @@
 # shows the selected thing's components as sections of fields: its
 # Transform (position, rotation in degrees, scale) and, when it is shown,
 # its Material's values. Typing a value gives back a new scene with that
-# one value changed (apply); panels.js only draws what this file returns
-# and passes the typed numbers back.
+# one value changed (apply). view.bend says what is drawn for all of this
+# and what each click and keystroke means.
 #
 # The scene stays data (engine/scene.bend): the panels are a way of seeing
 # and editing it, the "thing with parts" view over the ECS-style data.

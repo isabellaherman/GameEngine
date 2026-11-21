@@ -25,4 +25,5 @@ Files:
   defaults.bend   the values, each handed on from its source
   LAWS.bend       the rule, one law per value
   PROOF.bend      the proofs
-  defaults.js     draws the gizmo and the info button
+  view.bend       the info button, written in Bend (a Bend-UI dropdown)
+  defaults.js     draws the gizmo, and puts the info button on the page

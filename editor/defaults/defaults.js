@@ -1,9 +1,12 @@
 // Editor Defaults on screen: the axis gizmo and the info button.
-// It draws what defaults.bend hands on. The gizmo moves only the editor camera
-// (how we look); it never changes the World.
+// The gizmo is a canvas, drawn here from what defaults.bend hands on; it moves only the editor
+// camera (how we look) and never changes the World. The info button is written in Bend
+// (view.bend): this file only puts it on the page, with Bend-UI's driver.
 
-import { tokens as T, initSegmented } from "bend-ui";
+import { tokens as T } from "bend-ui";
+import { mount } from "bend-ui/web";
 import D from "./defaults.bend";
+import Info from "./view.bend";
 
 const list = (l) => {
   const out = [];
@@ -21,66 +24,6 @@ const el = (tag, cls, text) => {
 const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 const still = matchMedia("(prefers-reduced-motion: reduce)");
 
-// The info button: a Bend-UI dropdown that says what each axis means.
-function info() {
-  const dd = el("div", "dropdown");
-  const btn = el("button", "btn btn--plain btn--neutral btn--sm btn--icon btn--round");
-  btn.setAttribute("aria-haspopup", "menu");
-  btn.setAttribute("aria-expanded", "false");
-  btn.setAttribute("aria-label", "About the scene and accessibility");
-  btn.innerHTML = '<svg class="icon"><use href="#i-info"/></svg>';
-
-  const menu = el("div", "menu menu--end editor-defaults__info");
-  menu.setAttribute("role", "dialog");
-  menu.setAttribute("aria-label", "About the scene and accessibility");
-  menu.hidden = true;
-
-  const { x, y, z } = D.origin();
-  const origin = el("div", "editor-defaults__row");
-  origin.append(el("span", "item-title", "Origin"), el("span", "mono detail", `${x}, ${y}, ${z}`));
-  menu.append(origin);
-  for (const a of list(D.axes())) {
-    const row = el("div", "editor-defaults__row");
-    const dot = el("span", "dot");
-    dot.style.background = a.tone;
-    dot.style.borderColor = a.tone;
-    const name = el("span", "outline__row");
-    name.append(dot, el("span", "item-title", a.name));
-    row.append(name, el("span", "detail", a.points));
-    menu.append(row);
-  }
-
-  // Accessibility (ACCESSIBILITY.bend): whether motion is reduced, and why.
-  // A Bend-UI field holding a segmented Off/On that only shows the state
-  // (data-manual: a click changes nothing); it springs when the state changes.
-  const field = el("div", "field");
-  const label = el("span", "field__label", "Reduce motion");
-  label.id = "editor-defaults-motion";
-  const seg = el("div", "segmented segmented--slide editor-defaults__readonly");
-  seg.dataset.motion = "spring";
-  seg.dataset.manual = "";
-  seg.setAttribute("role", "group");
-  seg.setAttribute("aria-labelledby", "editor-defaults-motion");
-  const off = el("button", "", "Off"), on = el("button", "", "On");
-  for (const b of [off, on]) { b.type = "button"; b.tabIndex = -1; }
-  seg.append(off, on);
-  field.append(label, seg);
-  const show = () => {
-    const reduced = D.reduce_motion(still.matches);
-    const was = on.getAttribute("aria-pressed") === "true";
-    on.setAttribute("aria-pressed", reduced);
-    off.setAttribute("aria-pressed", !reduced);
-    if (was !== reduced) seg.dispatchEvent(new CustomEvent("change", { detail: reduced ? on : off }));
-  };
-  show();
-  still.addEventListener("change", show);
-  menu.append(el("hr", "separator"), el("h3", "group-title", "Accessibility"), field);
-  queueMicrotask(() => initSegmented(seg));
-
-  dd.append(btn, menu);
-  return dd;
-}
-
 // The gizmo: drawn on its own canvas at the screen's pixel density.
 export function mountDefaults(root, { getCam, setCam, orbit }) {
   const size = D.gizmo_size(), r = D.gizmo_radius(), none = D.gizmo_none();
@@ -89,7 +32,10 @@ export function mountDefaults(root, { getCam, setCam, orbit }) {
   canvas.setAttribute("role", "img");
   canvas.setAttribute("aria-label", "Axis gizmo. Click an axis to look along it; drag to orbit.");
   const g = canvas.getContext("2d");
-  root.append(canvas, info());
+  root.append(canvas);
+  // The info button, after the gizmo: view.bend says what it shows.
+  const info = mount(root, { init: () => Info.start(still.matches), render: Info.render, on_event: Info.on_event }, { adopt: true });
+  still.addEventListener("change", () => info.dispatch(Info.motion_event(still.matches)));
 
   let hover = none, inside = false;
 
