@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Export Pipeline</title>
+<style>
+  :root { --ink: #1a1a1a; --mid: #6b6b6b; --faint: #a3a3a3; --line: #1a1a1a; --shade: #ececea; --paper: #ffffff; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font: 13px/1.5 ui-sans-serif, -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif; }
+  .page { max-width: 1040px; margin: 0 auto; padding: 56px 24px 72px; }
+  h1 { font-size: 20px; font-weight: 600; margin: 0 0 6px; }
+  h2 { font-size: 15px; font-weight: 600; margin: 56px 0 4px; }
+  h2 small { font-weight: 400; color: var(--mid); font-size: 13px; }
+  p { margin: 0 0 10px; max-width: 760px; }
+  .sub { color: var(--mid); margin-bottom: 8px; }
+  .toc { font-size: 12px; color: var(--mid); margin: 16px 0 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 4px 16px; }
+  .toc a { color: var(--ink); }
+  code { font: 11.5px ui-monospace, Menlo, monospace; }
+
+  .figure { border: 1px solid var(--line); padding: 12px; margin: 14px 0 6px; }
+  .caption { font-size: 11.5px; color: var(--mid); margin: 0 0 8px; }
+
+  /* Flow: boxes joined by arrows. */
+  .flow { display: flex; flex-wrap: wrap; align-items: stretch; gap: 0; }
+  .flow { flex-wrap: nowrap; }
+  .step { flex: 1 1 0; min-width: 0; border: 1px solid var(--line); padding: 8px 10px; display: flex; flex-direction: column; gap: 4px; min-height: 96px; }
+  .step b { font-size: 12px; }
+  .step span { font-size: 11px; color: var(--mid); }
+  .step em { font-style: normal; font-size: 10.5px; font-family: ui-monospace, Menlo, monospace; color: var(--ink); }
+  .step .n { font-size: 10px; color: var(--mid); font-family: ui-monospace, Menlo, monospace; }
+  .arrow { flex: 0 0 22px; display: flex; align-items: center; justify-content: center; color: var(--mid); font-size: 14px; }
+  .step.done { background: var(--paper); }
+  .step.part { background: linear-gradient(to right, var(--shade) 50%, var(--paper) 50%); }
+  .step.no { border-style: dashed; border-color: var(--faint); color: var(--faint); }
+  .step.no span, .step.no em { color: var(--faint); }
+  .step.ext { background: var(--shade); }
+
+  /* Module map */
+  .modules { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+  .mod { border: 1px solid var(--line); }
+  .mod h3 { margin: 0; padding: 5px 8px; font-size: 11px; font-weight: 600; border-bottom: 1px solid var(--line); background: var(--shade); }
+  .mod ul { margin: 0; padding: 8px 8px 8px 24px; font-size: 12px; }
+  .mod.no { border-style: dashed; }
+  .mod.no h3 { background: var(--paper); border-bottom-style: dashed; }
+
+  /* Sequence diagram */
+  .seq { display: grid; grid-template-columns: 120px repeat(4, minmax(0, 1fr)); border: 1px solid var(--line); }
+  .seq > div { padding: 6px 8px; border-bottom: 1px solid var(--shade); font-size: 11.5px; }
+  .seq .h { font-weight: 600; background: var(--shade); border-bottom: 1px solid var(--line); text-align: center; }
+  .seq .t { color: var(--mid); font-family: ui-monospace, Menlo, monospace; font-size: 10.5px; }
+  .seq .m { text-align: center; }
+  .seq .m.r::after { content: " →"; color: var(--mid); }
+  .seq .m.l::before { content: "← "; color: var(--mid); }
+  .seq .gate { background: var(--shade); font-weight: 600; text-align: center; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 12px; margin: 10px 0 6px; }
+  th, td { text-align: left; vertical-align: top; padding: 6px 12px 6px 0; border-bottom: 1px solid var(--shade); }
+  th { font-weight: 600; color: var(--mid); border-bottom-color: var(--line); }
+  td.num { font-family: ui-monospace, Menlo, monospace; font-size: 11.5px; white-space: nowrap; }
+
+  .bars { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+  .bar { display: grid; grid-template-columns: 220px minmax(0, 1fr) 120px; gap: 10px; align-items: center; font-size: 12px; }
+  .bar i { display: block; height: 12px; border: 1px solid var(--line); background: var(--shade); }
+  .bar i.us { background: var(--ink); }
+  .bar .v { font-family: ui-monospace, Menlo, monospace; font-size: 11px; color: var(--mid); }
+
+  .key { display: flex; flex-wrap: wrap; gap: 20px; font-size: 11.5px; color: var(--mid); margin-top: 8px; }
+  .key span { display: inline-flex; align-items: center; gap: 6px; }
+  .key i { width: 22px; height: 12px; border: 1px solid var(--line); display: inline-block; }
+  .key i.part { background: linear-gradient(to right, var(--shade) 50%, var(--paper) 50%); }
+  .key i.ext { background: var(--shade); }
+  .key i.no { border-style: dashed; border-color: var(--faint); }
+
+  ol.phases { margin: 10px 0 0; padding-left: 20px; max-width: 760px; }
+  ol.phases li { margin-bottom: 8px; }
+  .sources { font-size: 11.5px; color: var(--mid); margin-top: 8px; padding-left: 18px; }
+  .sources a { color: var(--mid); word-break: break-all; }
+
+  @media (max-width: 760px) {
+    .modules { grid-template-columns: 1fr; }
+    .flow { flex-direction: column; }
+    .arrow { flex-basis: 100%; height: 18px; transform: rotate(90deg); }
+    .seq { grid-template-columns: 90px repeat(4, minmax(0, 1fr)); }
+    .bar { grid-template-columns: 1fr; gap: 2px; }
+    .page { padding: 32px 16px; }
+  }
+</style>
+</head>
+<body>
+<main class="page">
+  <h1>Export Pipeline</h1>
+  <p class="sub">GameEngine 0.0.1. How a game made in this engine reaches players: on the web first, natively and on consoles later. Data gathered November 2026; sources at the end.</p>
+  <ul class="toc">
+    <li><a href="#where">1. Where export lives</a></li>
+    <li><a href="#web">2. The web pipeline</a></li>
+    <li><a href="#langs">3. Languages involved</a></li>
+    <li><a href="#render">4. WebGL vs WebGPU vs a Unity-style build</a></li>
+    <li><a href="#vercel">5. Publishing, modeled on Vercel</a></li>
+    <li><a href="#agents">6. How agents publish a game</a></li>
+    <li><a href="#consoles">7. Native and consoles</a></li>
+    <li><a href="#plan">8. Suggested order</a></li>
+  </ul>
+
+  <!-- 1 -->
+  <h2 id="where">1. Where export lives <small>outside the runtime, inside the project</small></h2>
+  <p>Gregory's book splits an engine into the <i>runtime</i> (what ships inside the game) and the <i>tools</i> (what makes the game: editor, asset pipeline, build). Export is a tool. It reads the engine and the game, and writes something a player can run; it never ships inside that thing. So it gets its own folder beside <code>engine/</code> and <code>editor/</code>, and the runtime never imports it.</p>
+  <div class="figure">
+    <div class="modules">
+      <div class="mod"><h3>engine/ · runtime</h3><ul><li>World, camera, math</li><li>Renderer</li><li>Ships inside every game</li></ul></div>
+      <div class="mod"><h3>editor/ · tools</h3><ul><li>Editor Defaults, gizmo</li><li>Accessibility settings</li><li>Never ships to players</li></ul></div>
+      <div class="mod no"><h3>export/ · tools (not yet)</h3><ul><li><code>export/web</code>: the page, bundle, assets</li><li><code>export/native</code>: Bend → C → binary</li><li>Reads engine and game; ships nothing of itself</li></ul></div>
+    </div>
+  </div>
+  <p class="caption">Figure 1. Export sits with the tools. Arrows only point into the runtime, never out of it.</p>
+
+  <!-- 2 -->
+  <h2 id="web">2. The web pipeline <small>from a project folder to a link anyone can open</small></h2>
+  <div class="figure">
+    <div class="flow">
+      <div class="step done"><span class="n">1</span><b>Check</b><span>Every law and type holds, or nothing ships.</span><em>bun run check</em></div>
+      <div class="arrow">→</div>
+      <div class="step done"><span class="n">2</span><b>Compile</b><span>Bend becomes a JS module of plain functions.</span><em>.bend → .js</em></div>
+      <div class="arrow">→</div>
+      <div class="step done"><span class="n">3</span><b>Bundle</b><span>Page, engine, Bend-UI and glue into a few files.</span><em>bend index.html -o dist</em></div>
+      <div class="arrow">→</div>
+      <div class="step no"><span class="n">4</span><b>Condition assets</b><span>Textures to KTX2, meshes to GLB, audio to Opus; names hashed.</span><em>export/web</em></div>
+      <div class="arrow">→</div>
+      <div class="step part"><span class="n">5</span><b>Output</b><span>One static folder: html, js, css, assets, manifest.</span><em>dist/</em></div>
+      <div class="arrow">→</div>
+      <div class="step part"><span class="n">6</span><b>Host</b><span>Any static host serves it from a CDN.</span><em>The engine's own publish</em></div>
+      <div class="arrow">→</div>
+      <div class="step ext"><span class="n">7</span><b>Play</b><span>The browser loads it and draws with the GPU.</span><em>WebGL2 / WebGPU</em></div>
+    </div>
+    <div class="key"><span><i></i>Works today</span><span><i class="part"></i>Works, by hand</span><span><i class="ext"></i>The browser's job</span><span><i class="no"></i>Not yet</span></div>
+  </div>
+  <p class="caption">Figure 2. The web export, step by step. Steps 1–3 already run; step 4 is needed as soon as the game has assets; 5–6 work but are manual.</p>
+  <p>A web game is static: no server runs game code, so every step ends in plain files. That is why the engine can host it itself: publishing a game is storing a folder and giving it a link. A server only appears later, for accounts, saves in the cloud or multiplayer.</p>
+
+  <!-- 3 -->
+  <h2 id="langs">3. Languages involved <small>what each one does, and whether we use it</small></h2>
+  <table>
+    <tr><th>Language</th><th>Its job</th><th>Today</th></tr>
+    <tr><td>Bend</td><td>Every rule and number of the engine and the game; laws that must hold before export.</td><td>Used</td></tr>
+    <tr><td>JavaScript</td><td>Glue only: read input, hand data to the GPU, run the frame. Bend compiles to it.</td><td>Used</td></tr>
+    <tr><td>GLSL ES 3.0</td><td>Shaders for WebGL2: the small programs that run on the GPU per vertex and per pixel.</td><td>Used (one shader)</td></tr>
+    <tr><td>WGSL</td><td>Shaders for WebGPU. Same role, newer API.</td><td>Not yet</td></tr>
+    <tr><td>HTML / CSS</td><td>The page around the game; Bend-UI's components.</td><td>Used</td></tr>
+    <tr><td>JSON</td><td>Manifests: which assets exist, their hashes, the export settings; host config (<code>vercel.json</code>).</td><td>Not yet</td></tr>
+    <tr><td>C</td><td>Bend's native output. The road to desktop and consoles.</td><td>Not yet</td></tr>
+    <tr><td>WebAssembly</td><td>What Unity and Godot ship to the web. Bend does not emit it; reachable through C and Emscripten, untested.</td><td>Not needed</td></tr>
+  </table>
+
+  <!-- 4 -->
+  <h2 id="render">4. WebGL vs WebGPU vs a Unity-style build</h2>
+  <p>Two separate questions hide here. <b>How the engine reaches the browser</b>: as its own code (like three.js) or as a whole engine runtime compiled to WebAssembly (like Unity). And <b>which GPU API it draws with</b>: WebGL2 or WebGPU.</p>
+  <div class="figure">
+    <p class="caption">Download before the first frame, compressed (smaller is better)</p>
+    <div class="bars">
+      <div class="bar"><span>This engine today (whole page)</span><i class="us" style="width:0.5%"></i><span class="v">≈ 48 KB gzip</span></div>
+      <div class="bar"><span>three.js, full renderer</span><i style="width:1.5%"></i><span class="v">≈ 140–150 KB gzip</span></div>
+      <div class="bar"><span>Unity, empty project, tuned</span><i style="width:22%"></i><span class="v">≈ 2.2 MB</span></div>
+      <div class="bar"><span>Unity, empty project, default</span><i style="width:97%"></i><span class="v">≈ 9.7 MB</span></div>
+    </div>
+  </div>
+  <p class="caption">Figure 3. Bars to scale. Ours is measured from <code>dist/</code> (JS 38 KB, CSS 10 KB, HTML 1 KB). Others from public reports; Unity figures for Unity 6.</p>
+  <table>
+    <tr><th></th><th>Engine as its own JS (our way, three.js)</th><th>Engine compiled to WASM (Unity, Godot)</th></tr>
+    <tr><td>First load</td><td>Small: tens to hundreds of KB.</td><td>Megabytes before anything shows; a loading bar.</td></tr>
+    <tr><td>Memory</td><td>What the game uses.</td><td>A whole runtime; one Unity 6 report: ≈ 200 MB for a release build.</td></tr>
+    <tr><td>Fits the page</td><td>Yes: it is the page; HTML and CSS around it work as usual.</td><td>A canvas in a box; talking to the page goes through a bridge.</td></tr>
+    <tr><td>Heavy CPU work</td><td>JS is slower for raw number crunching.</td><td>WASM is closer to native speed.</td></tr>
+    <tr><td>Same code on console</td><td>Needs a second output (Bend → C).</td><td>The engine is already native; the web is one more target.</td></tr>
+  </table>
+  <table>
+    <tr><th>GPU API</th><th>Reach</th><th>Notes</th></tr>
+    <tr><td>WebGL2</td><td class="num">≈ 98% of devices</td><td>Baseline "widely available" since March 2024. What we use.</td></tr>
+    <tr><td>WebGPU</td><td class="num">≈ 76–83%</td><td>On by default in Chrome 113+ (Android 121+), Firefox 141 (Windows) and 145 (Apple Silicon macOS), Safari 26. Gaps: Linux Firefox, older phones. Faster, compute shaders, WGSL.</td></tr>
+  </table>
+  <p><b>Reading:</b> the engine already takes the three.js road, which is the right one for the web. For the API, stay on WebGL2 now and add WebGPU later as a second backend with WebGL2 as the fallback, the way three.js does. Because the math lives in Bend, only the drawing layer (<code>main.js</code>) would change.</p>
+
+  <!-- 5 -->
+  <h2 id="vercel">5. Publishing, modeled on Vercel <small>a reference, not a host</small></h2>
+  <p>Vercel is not used here. It is studied because its deploy is the experience the engine should give to whoever makes a game: one action, a link, safe to share, easy to undo.</p>
+  <div class="figure">
+    <div class="flow">
+      <div class="step"><span class="n">1</span><b>Push</b><span>A commit on GitHub, or <code>vercel deploy</code> from a terminal.</span></div>
+      <div class="arrow">→</div>
+      <div class="step"><span class="n">2</span><b>Build</b><span>A clean machine clones the repo, detects the framework, installs, runs the build.</span></div>
+      <div class="arrow">→</div>
+      <div class="step"><span class="n">3</span><b>Build Output</b><span>Everything lands in one agreed folder shape.</span><em>.vercel/output/</em></div>
+      <div class="arrow">→</div>
+      <div class="step"><span class="n">4</span><b>Upload</b><span>Files are stored by content hash; unchanged files aren't sent again.</span></div>
+      <div class="arrow">→</div>
+      <div class="step"><span class="n">5</span><b>Deployment</b><span>Immutable, with its own permanent URL. Every push gets a preview.</span></div>
+      <div class="arrow">→</div>
+      <div class="step"><span class="n">6</span><b>Alias</b><span>The domain is pointed at a deployment. Rollback = point it back.</span></div>
+      <div class="arrow">→</div>
+      <div class="step ext"><span class="n">7</span><b>Edge</b><span>Static files cached near players; functions run only on request.</span></div>
+    </div>
+  </div>
+  <p class="caption">Figure 4. Vercel's deploy, from a push to a cached page: the reference.</p>
+  <p>What makes it easy is three agreements. <b>The Build Output API</b>: any tool that writes <code>.vercel/output/</code> (a <code>static/</code> folder, optional <code>functions/</code>, a <code>config.json</code>) gets deployed, whatever framework made it. <b>Immutability</b>: a deployment never changes, so a preview link is safe to share and going live is only moving a pointer. <b>Git as the trigger</b>: no "deploy" step to remember; a push is a deploy.</p>
+  <p><b>What the engine takes from it, for games:</b></p>
+  <table>
+    <tr><th>Vercel</th><th>In the engine</th></tr>
+    <tr><td>Build Output API</td><td>One agreed game folder that <code>export/web</code> always writes: page, bundle, assets, manifest. Anything that writes it can be published.</td></tr>
+    <tr><td>Content-hash upload</td><td>Assets named by hash; publishing again sends only what changed.</td></tr>
+    <tr><td>Immutable deployment</td><td>Every publish of a game is a fixed version with its own link, never overwritten.</td></tr>
+    <tr><td>Preview per push</td><td>Every save of a game can produce a playable preview link.</td></tr>
+    <tr><td>Alias</td><td>The game's public link points at one version. Going live or rolling back is moving that pointer.</td></tr>
+    <tr><td>Edge cache</td><td>Static game files served from a CDN near players.</td></tr>
+  </table>
+
+  <!-- 6 -->
+  <h2 id="agents">6. How agents publish a game <small>Vercel's model, applied to the engine</small></h2>
+  <p>In Vercel an agent has three doors, all ending at the same API: the <b>CLI</b>, the <b>SDK / REST API</b>, and an <b>MCP server</b> with tools to read docs, list deployments, read logs and deploy. A <b>claimable deployment</b> lets an agent publish first and hand ownership to a person through a link. The engine can offer the same doors for games: its own CLI, API and MCP server, so an agent can check, build and publish a game, while going live stays with the person.</p>
+  <div class="figure">
+    <div class="seq">
+      <div class="h">Step</div><div class="h">Person</div><div class="h">Agent</div><div class="h">Engine MCP / CLI</div><div class="h">Engine publish</div>
+      <div class="t">1 ask</div><div class="m r">"publish the game"</div><div></div><div></div><div></div>
+      <div class="t">2 check</div><div></div><div class="m">runs <code>bun run check</code>, builds <code>dist/</code></div><div></div><div></div>
+      <div class="t">3 deploy</div><div></div><div class="m r">deploy (preview)</div><div class="m r">POST deployment</div><div class="m">builds, stores, new URL</div>
+      <div class="t">4 report</div><div></div><div class="m l">preview URL, build log</div><div class="m l">result</div><div class="m l">status: ready</div>
+      <div class="t">5 review</div><div class="m l">opens the preview</div><div class="m l">shares the link</div><div></div><div></div>
+      <div class="t">6 approve</div><div class="gate" style="grid-column: span 4">Human approval: only the person says "go live"</div>
+      <div class="t">7 promote</div><div class="m r">"yes"</div><div class="m r">promote</div><div class="m r">alias domain</div><div class="m">production → this deployment</div>
+    </div>
+  </div>
+  <p class="caption">Figure 5. One publish of a game by an agent, following Vercel's flow. Previews are free to make; production waits for a person (step 6).</p>
+
+  <!-- 7 -->
+  <h2 id="consoles">7. Native and consoles <small>the long road</small></h2>
+  <div class="figure">
+    <div class="flow">
+      <div class="step done"><span class="n">1</span><b>Bend</b><span>The same engine and game code.</span></div>
+      <div class="arrow">→</div>
+      <div class="step part"><span class="n">2</span><b>C</b><span>Bend already compiles to C (and to Metal/CUDA for the GPU).</span><em>bend main.bend -o game.c</em></div>
+      <div class="arrow">→</div>
+      <div class="step no"><span class="n">3</span><b>Platform layer</b><span>Window, input, audio, file paths, the graphics API of each platform.</span></div>
+      <div class="arrow">→</div>
+      <div class="step ext"><span class="n">4</span><b>Platform SDK</b><span>Each console's compiler, libraries and dev kit, under NDA.</span></div>
+      <div class="arrow">→</div>
+      <div class="step ext"><span class="n">5</span><b>Certification</b><span>The platform holder tests and approves the build.</span></div>
+    </div>
+  </div>
+  <p class="caption">Figure 6. From Bend to a console. Steps 4–5 belong to Nintendo, Sony and Microsoft.</p>
+  <p>Consoles cannot be reached by open tools alone. Godot's documentation states that no engine may distribute console export templates without the user proving they are a licensed developer, because of the platform holders' NDAs. Many studios outsource the port. What the engine can do now is keep its layers clean, so that the platform layer is the only thing a port has to write: logic in Bend, drawing and input behind a thin layer, as it already is on the web.</p>
+
+  <!-- 8 -->
+  <h2 id="plan">8. Suggested order</h2>
+  <ol class="phases">
+    <li><b>Web, static, by hand.</b> Done: <code>dist/</code> on GitHub Pages.</li>
+    <li><b><code>export/web</code>.</b> One command: check, build, hash file names, write a manifest, produce <code>dist/</code>. Laws for it: nothing ships if a law fails; every file in the manifest exists.</li>
+    <li><b>Asset conditioning.</b> When the first model or texture arrives: GLB, KTX2, Opus.</li>
+    <li><b>Engine publish.</b> Immutable versions, preview links, a public link that is a pointer; then the CLI and MCP doors for agents.</li>
+    <li><b>WebGPU backend</b> beside WebGL2, chosen at load time.</li>
+    <li><b><code>export/native</code>.</b> Desktop through Bend → C and Metal, using Bend's own window and audio.</li>
+    <li><b>Consoles</b>, once there is a game and a platform license.</li>
+  </ol>
+
+  <h2>Sources</h2>
+  <ol class="sources">
+    <li><a href="https://vercel.com/docs/build-output-api">Vercel — Build Output API</a></li>
+    <li><a href="https://vercel.com/docs/build-output-api/v3/primitives">Vercel — Build Output API primitives</a></li>
+    <li><a href="https://vercel.com/docs/fundamentals/builds">Vercel — Builds</a></li>
+    <li><a href="https://vercel.com/blog/behind-the-scenes-of-vercels-infrastructure">Vercel — Behind the scenes of Vercel's infrastructure</a></li>
+    <li><a href="https://vercel.com/changelog/vercel-mcp-can-now-deploy-code">Vercel — Vercel MCP can now deploy code</a></li>
+    <li><a href="https://vercel.com/kb/guide/ai-agents">Vercel — AI agents guide</a></li>
+    <li><a href="https://web.dev/blog/webgpu-supported-major-browsers">web.dev — WebGPU is now supported in major browsers</a></li>
+    <li><a href="https://web3dsurvey.com/webgl2">Web3D Survey — WebGL2 support</a></li>
+    <li><a href="https://web-platform-dx.github.io/web-features-explorer/features/webgl2">Web features explorer — WebGL2 (Baseline)</a></li>
+    <li><a href="https://playgama.com/blog/unity/how-to-shrink-empty-unity-build-from-10mb-to-2mb/">Playgama — Shrinking an empty Unity build from 10 MB to 2 MB</a></li>
+    <li><a href="https://discussions.unity.com/t/web-build-memory-consumption-on-unity-6/1613334">Unity Discussions — Web build memory consumption on Unity 6</a></li>
+    <li><a href="https://discourse.threejs.org/t/three-js-file-size-when-importing-via-npm-and-bundling-with-webpack/8904">three.js forum — three.js file size when bundling</a></li>
+    <li><a href="https://docs.godotengine.org/en/3.6/tutorials/platform/consoles.html">Godot docs — Console support</a></li>
+  </ol>
+</main>
+</body>
+</html>
